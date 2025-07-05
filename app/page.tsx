@@ -534,7 +534,7 @@ export default function GameDevPortfolio() {
               <div className="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 relative overflow-hidden">
                 {playingVideo === "gattlebrounds" ? (
                   <video ref={videoRef} className="w-full h-full object-cover" autoPlay loop muted playsInline>
-                    <source src="/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
+                    <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
                   </video>
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
