@@ -133,8 +133,7 @@ export default function GameDevPortfolio() {
             </div>
             <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">Arklite</h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Programmer by trade, aspiring to be a one-person game development powerhouse. Creating immersive
-              experiences from concept to completion.
+            Programmer by trade, with a versatile game development skill set honed over five years. Crafting enjoyable gameplay experiences from early concepts to evolving prototypes.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-red-600 hover:bg-red-400 text-white border-0 transition-colors">
