@@ -726,38 +726,40 @@ export default function GameDevPortfolio() {
               <div>
                 <div className="space-y-6 text-gray-300">
                   <p className="text-lg">
-                    I'm a passionate game developer with a strong foundation in programming, working towards becoming a
-                    complete solo game development studio. My journey started with code, but I'm constantly expanding my
-                    skills across all aspects of game creation.
+                    I'm a passionate game developer with a solid foundation in programming, 
+                    driven to create unique games through a deep dive into every aspect of development. 
+                    My journey began with code, and I’m continually broadening my skills across programming, 
+                    art, sound design, game design theory, and even pipelines and workflows.
                   </p>
                   <p>
-                    Currently focusing on mastering C# with Godot, while also being capable with Unity. I'm exploring
-                    the creative sides of game development including art, sound design, and game design theory. My goal
-                    is to create compelling, polished games that tell meaningful stories and provide engaging
-                    experiences.
+                    Currently, I’m honing my C# skills with Godot while maintaining proficiency with Unity. 
+                    My focus is on crafting games that blend my love for diverse gameplay experiences—drawn 
+                    from years of playing everything from competitive titles to single-player adventures—into fresh, 
+                    enjoyable mechanics and systems.
                   </p>
                   <p>
-                    When I'm not coding or designing, you'll find me analyzing games, learning new tools, or
-                    contributing to the indie game development community.
+                    When I’m not coding or designing, I enjoy analyzing games, experimenting with new tools, 
+                    and contributing to the indie game community, like with my Stat Tracker tool for Diablo: The Hell 2 mod, 
+                    which enhances player experience through data insights.
                   </p>
                 </div>
 
                 <div className="mt-8 grid grid-cols-2 gap-4">
                   <div className="bg-gray-900/50 p-4 rounded-lg border border-white/10">
-                    <div className="text-2xl font-bold text-red-500">5+</div>
+                    <div className="text-2xl font-bold text-red-500">7+</div>
                     <div className="text-sm text-gray-400">Years Programming</div>
                   </div>
                   <div className="bg-gray-900/50 p-4 rounded-lg border border-white/10">
-                    <div className="text-2xl font-bold text-red-500">12+</div>
-                    <div className="text-sm text-gray-400">Projects Completed</div>
+                    <div className="text-2xl font-bold text-red-500">5</div>
+                    <div className="text-sm text-gray-400">Projects Contributed</div>
                   </div>
                   <div className="bg-gray-900/50 p-4 rounded-lg border border-white/10">
-                    <div className="text-2xl font-bold text-red-500">3</div>
-                    <div className="text-sm text-gray-400">Games Published</div>
+                    <div className="text-2xl font-bold text-red-500">1</div>
+                    <div className="text-sm text-gray-400">Prototype In Development</div>
                   </div>
                   <div className="bg-gray-900/50 p-4 rounded-lg border border-white/10">
-                    <div className="text-2xl font-bold text-red-500">∞</div>
-                    <div className="text-sm text-gray-400">Ideas in Queue</div>
+                    <div className="text-2xl font-bold text-red-500">7+</div>
+                    <div className="text-sm text-gray-400">Skills Mastered</div>
                   </div>
                 </div>
               </div>
