@@ -21,8 +21,48 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { AnimatedBackground } from "@/components/animated-background"
+import { useState, useRef, useEffect } from "react"
 
 export default function GameDevPortfolio() {
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null)
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+
+  const handleCardHover = (cardId: string) => {
+    setHoveredCard(cardId)
+
+    // Clear any existing timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+
+    // Set timeout for 0.5 seconds
+    hoverTimeoutRef.current = setTimeout(() => {
+      if (cardId === "gattlebrounds") {
+        setPlayingVideo("gattlebrounds")
+      }
+    }, 500)
+  }
+
+  const handleCardLeave = () => {
+    setHoveredCard(null)
+
+    // Clear timeout if leaving before 0.5 seconds
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+  }
+
+  useEffect(() => {
+    // Cleanup timeout on unmount
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Advanced Animated Background */}
@@ -274,7 +314,11 @@ export default function GameDevPortfolio() {
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
-            <Card className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50">
+            <Card
+              className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+              onMouseEnter={() => handleCardHover("cyber-runner")}
+              onMouseLeave={handleCardLeave}
+            >
               <div className="aspect-video bg-gradient-to-br from-red-500/10 to-purple-500/10 relative overflow-hidden">
                 <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
                   {/* Cyberpunk circuit pattern */}
@@ -379,7 +423,11 @@ export default function GameDevPortfolio() {
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50">
+            <Card
+              className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+              onMouseEnter={() => handleCardHover("quantum-puzzles")}
+              onMouseLeave={handleCardLeave}
+            >
               <div className="aspect-video bg-gradient-to-br from-blue-500/10 to-green-500/10 relative overflow-hidden">
                 <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-black to-teal-900 flex items-center justify-center relative">
                   {/* Quantum particle visualization */}
@@ -478,59 +526,88 @@ export default function GameDevPortfolio() {
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50">
+            <Card
+              className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+              onMouseEnter={() => handleCardHover("gattlebrounds")}
+              onMouseLeave={handleCardLeave}
+            >
               <div className="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 relative overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
-                  {/* Top-down action adventure visualization */}
-                  <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
-                    <defs>
-                      <linearGradient id="golemGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="rgba(147, 51, 234, 0.8)" />
-                        <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
-                        <stop offset="100%" stopColor="rgba(147, 51, 234, 0.4)" />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Cyber golem character (top-down view) */}
-                    <circle cx="200" cy="120" r="12" fill="none" stroke="url(#golemGlow)" strokeWidth="2" />
-                    <circle cx="200" cy="120" r="8" fill="rgba(147, 51, 234, 0.3)" />
-
-                    {/* Movement trail */}
-                    <path
-                      d="M180 140 Q190 130 200 120 Q210 110 220 100"
-                      stroke="rgba(236, 72, 153, 0.6)"
-                      strokeWidth="2"
-                      fill="none"
-                      strokeDasharray="3,3"
+                {playingVideo === "gattlebrounds" ? (
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    crossOrigin="anonymous"
+                  >
+                    <source
+                      src="https://github.com/cybernaut4/game-dev-portfolio/raw/refs/heads/main/assets/Gattlebrounds-showcase.ok.mp4"
+                      type="video/mp4"
                     />
+                  </video>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
+                    {/* Top-down action adventure visualization */}
+                    <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
+                      <defs>
+                        <linearGradient id="golemGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="rgba(147, 51, 234, 0.8)" />
+                          <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
+                          <stop offset="100%" stopColor="rgba(147, 51, 234, 0.4)" />
+                        </linearGradient>
+                      </defs>
 
-                    {/* Platforming elements */}
-                    <rect x="120" y="80" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
-                    <rect x="240" y="160" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
-                    <rect x="80" y="180" width="30" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
+                      {/* Cyber golem character (top-down view) */}
+                      <circle cx="200" cy="120" r="12" fill="none" stroke="url(#golemGlow)" strokeWidth="2" />
+                      <circle cx="200" cy="120" r="8" fill="rgba(147, 51, 234, 0.3)" />
 
-                    {/* Otherworldly environment elements */}
-                    <circle cx="100" cy="60" r="15" fill="none" stroke="rgba(147, 51, 234, 0.4)" strokeWidth="1" />
-                    <circle cx="320" cy="180" r="20" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="1" />
+                      {/* Movement trail */}
+                      <path
+                        d="M180 140 Q190 130 200 120 Q210 110 220 100"
+                        stroke="rgba(236, 72, 153, 0.6)"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeDasharray="3,3"
+                      />
 
-                    {/* Skydiving trajectory */}
-                    <path
-                      d="M350 50 Q300 80 250 110 Q200 140 150 170"
-                      stroke="rgba(147, 51, 234, 0.5)"
-                      strokeWidth="2"
-                      fill="none"
-                      strokeDasharray="5,5"
-                    />
+                      {/* Platforming elements */}
+                      <rect x="120" y="80" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
+                      <rect
+                        x="240"
+                        y="160"
+                        width="40"
+                        height="8"
+                        fill="none"
+                        stroke="url(#golemGlow)"
+                        strokeWidth="1"
+                      />
+                      <rect x="80" y="180" width="30" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
 
-                    {/* Action elements (projectiles/effects) */}
-                    <circle cx="160" cy="100" r="2" fill="rgba(236, 72, 153, 0.8)" />
-                    <circle cx="240" cy="140" r="2" fill="rgba(147, 51, 234, 0.8)" />
-                    <circle cx="280" cy="80" r="2" fill="rgba(236, 72, 153, 0.8)" />
-                  </svg>
+                      {/* Otherworldly environment elements */}
+                      <circle cx="100" cy="60" r="15" fill="none" stroke="rgba(147, 51, 234, 0.4)" strokeWidth="1" />
+                      <circle cx="320" cy="180" r="20" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="1" />
 
-                  {/* Scanning effect */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent animate-pulse"></div>
-                </div>
+                      {/* Skydiving trajectory */}
+                      <path
+                        d="M350 50 Q300 80 250 110 Q200 140 150 170"
+                        stroke="rgba(147, 51, 234, 0.5)"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeDasharray="5,5"
+                      />
+
+                      {/* Action elements (projectiles/effects) */}
+                      <circle cx="160" cy="100" r="2" fill="rgba(236, 72, 153, 0.8)" />
+                      <circle cx="240" cy="140" r="2" fill="rgba(147, 51, 234, 0.8)" />
+                      <circle cx="280" cy="80" r="2" fill="rgba(236, 72, 153, 0.8)" />
+                    </svg>
+
+                    {/* Scanning effect */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent animate-pulse"></div>
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-purple-600 text-white">In Development</Badge>
@@ -571,7 +648,11 @@ export default function GameDevPortfolio() {
               </CardContent>
             </Card>
 
-            <Card className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50">
+            <Card
+              className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+              onMouseEnter={() => handleCardHover("developer-tools")}
+              onMouseLeave={handleCardLeave}
+            >
               <div className="aspect-video bg-gradient-to-br from-orange-500/10 to-red-500/10 relative overflow-hidden">
                 <div className="w-full h-full bg-gradient-to-br from-orange-900 via-black to-red-900 flex items-center justify-center relative">
                   {/* Developer tools interface */}
