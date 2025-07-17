@@ -82,9 +82,9 @@ export default function GameDevPortfolio() {
         <div className="container mx-auto px-4">
           <nav className="flex items-center justify-between h-16">
             <div className="text-xl font-bold">
-              <span className="text-red-500">[~]</span>
-              <span className="mx-3">Arklite</span>
-              <span className="text-red-500">[#]</span>
+              <span className="text-red-500">{"$\"{"}</span>
+              <span className="mx-0">Arklite</span>
+              <span className="text-red-500">{"}\""}</span>
             </div>
             <div className="hidden md:flex items-center h-full">
               {/* Angled separator before navigation */}
