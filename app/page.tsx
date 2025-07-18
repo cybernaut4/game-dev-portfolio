@@ -416,7 +416,7 @@ export default function GameDevPortfolio() {
                   muted
                   playsInline
                 >
-                  <source src="/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
+                  <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
                 </video>
                 <div
                   className={`w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative ${playingVideo === "gattlebrounds" ? "hidden" : "block"}`}
@@ -526,7 +526,7 @@ export default function GameDevPortfolio() {
                   muted
                   playsInline
                 >
-                  <source src="/videos/fake-stat-tracker-showcase.mp4" type="video/mp4" />
+                  <source src="/game-dev-portfolio/videos/fake-stat-tracker-showcase.mp4" type="video/mp4" />
                 </video>
                 <div
                   className={`w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative ${playingVideo === "stat-tracker" ? "hidden" : "block"}`}
