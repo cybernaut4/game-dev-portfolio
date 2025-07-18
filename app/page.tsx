@@ -686,23 +686,15 @@ export default function GameDevPortfolio() {
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    className="bg-red-600 hover:bg-red-400 transition-colors"
-                    onClick={() =>
-                      window.open("https://arklite-games.itch.io/stat-tracker-for-diablo-the-hell-2-mod", "_blank")
-                    }
-                  >
-                    <Play className="w-3 h-3 mr-1" />
-                    Get it on itch.io
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
-                  >
-                    <Github className="w-3 h-3 mr-1" />
-                    Code
+                  <Button size="sm" className="bg-red-600 hover:bg-red-400 transition-colors" asChild>
+                    <a
+                      href="https://arklite-games.itch.io/stat-tracker-for-diablo-the-hell-2-mod"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Get it on itch.io
+                    </a>
                   </Button>
                 </div>
               </CardContent>
@@ -795,17 +787,22 @@ export default function GameDevPortfolio() {
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" className="bg-red-600 hover:bg-red-400 transition-colors">
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    Play Online
+                  <Button size="sm" className="bg-red-600 hover:bg-red-400 transition-colors" asChild>
+                    <a href="#" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Play Online
+                    </a>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
+                    asChild
                   >
-                    <Github className="w-3 h-3 mr-1" />
-                    Source
+                    <a href="#" target="_blank" rel="noopener noreferrer">
+                      <Github className="w-3 h-3 mr-1" />
+                      Source
+                    </a>
                   </Button>
                 </div>
               </CardContent>
