@@ -10,13 +10,11 @@ import {
   Volume2,
   Zap,
   Github,
-  Linkedin,
   Mail,
   ExternalLink,
-  Download,
-  Play,
   Monitor,
   Globe,
+  ChevronDown,
 } from "lucide-react"
 import Link from "next/link"
 import { AnimatedBackground } from "@/components/animated-background"
@@ -26,6 +24,8 @@ export default function GameDevPortfolio() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
   const [loadedVideos, setLoadedVideos] = useState<Set<string>>(new Set())
+  const [failedVideos, setFailedVideos] = useState<Set<string>>(new Set())
+  const [loadingVideos, setLoadingVideos] = useState<Set<string>>(new Set())
   const [isMobile, setIsMobile] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
@@ -41,6 +41,31 @@ export default function GameDevPortfolio() {
     checkMobile()
     window.addEventListener("resize", checkMobile)
     return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  // Add smooth scrolling CSS
+  useEffect(() => {
+    // Add smooth scrolling to the html element
+    document.documentElement.style.scrollBehavior = "smooth"
+
+    return () => {
+      // Clean up on unmount
+      document.documentElement.style.scrollBehavior = "auto"
+    }
+  }, [])
+
+  // Reset video states on component mount
+  useEffect(() => {
+    // Clear all states on mount to handle refresh issues
+    setLoadedVideos(new Set())
+    setFailedVideos(new Set())
+    setLoadingVideos(new Set())
+    setPlayingVideo(null)
+
+    // Clear all refs
+    Object.keys(playPromisesRef.current).forEach((key) => {
+      playPromisesRef.current[key] = null
+    })
   }, [])
 
   // Mobile scroll-based video logic
@@ -77,7 +102,7 @@ export default function GameDevPortfolio() {
           if (prevCardElement) {
             const prevRect = prevCardElement.getBoundingClientRect()
             const prevIsHalfwayOffscreen =
-              prevRect.top < -prevRect.height / 2 || prevRect.bottom > windowHeight + prevRect.height / 2
+              prevRect.top < -prevRect.height / 2 || prevRect.bottom > windowHeight + rect.height / 2
 
             if (prevIsHalfwayOffscreen && isFullyVisible && playingVideo !== cardId) {
               pauseOtherVideos(cardId)
@@ -103,7 +128,7 @@ export default function GameDevPortfolio() {
   // Safe video play function that handles promises properly
   const safeVideoPlay = async (cardId: string) => {
     const video = videoRefs.current[cardId]
-    if (!video) return
+    if (!video || failedVideos.has(cardId)) return
 
     try {
       // Wait for any existing play promise to resolve first
@@ -124,7 +149,11 @@ export default function GameDevPortfolio() {
       playPromisesRef.current[cardId] = null
       // Ignore AbortError as it's expected when switching videos quickly
       if (error instanceof Error && error.name !== "AbortError") {
-        console.error("Video play error:", error)
+        console.error(`Video play error for ${cardId}:`, error)
+        // Mark video as failed if it's a loading error
+        if (error.name === "NotSupportedError" || error.message.includes("load")) {
+          setFailedVideos((prev) => new Set(prev).add(cardId))
+        }
       }
     }
   }
@@ -147,17 +176,17 @@ export default function GameDevPortfolio() {
       playPromisesRef.current[cardId] = null
       // Ignore AbortError as it's expected when switching videos quickly
       if (error instanceof Error && error.name !== "AbortError") {
-        console.error("Video pause error:", error)
+        console.error(`Video pause error for ${cardId}:`, error)
       }
     }
   }
 
   // Handle video playback explicitly
   useEffect(() => {
-    if (playingVideo) {
+    if (playingVideo && !failedVideos.has(playingVideo)) {
       safeVideoPlay(playingVideo)
     }
-  }, [playingVideo, loadedVideos])
+  }, [playingVideo, loadedVideos, failedVideos])
 
   const pauseOtherVideos = async (exceptCardId: string) => {
     const pausePromises = Object.keys(videoRefs.current)
@@ -168,7 +197,33 @@ export default function GameDevPortfolio() {
   }
 
   const handleVideoLoaded = (cardId: string) => {
+    console.log(`Video loaded successfully: ${cardId}`)
     setLoadedVideos((prev) => new Set(prev).add(cardId))
+    setLoadingVideos((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(cardId)
+      return newSet
+    })
+    setFailedVideos((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(cardId)
+      return newSet
+    })
+  }
+
+  const handleVideoError = (cardId: string, error: any) => {
+    console.error(`Video failed to load: ${cardId}`, error)
+    setFailedVideos((prev) => new Set(prev).add(cardId))
+    setLoadingVideos((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(cardId)
+      return newSet
+    })
+  }
+
+  const handleVideoLoadStart = (cardId: string) => {
+    console.log(`Video load started: ${cardId}`)
+    setLoadingVideos((prev) => new Set(prev).add(cardId))
   }
 
   const handleCardHover = (cardId: string) => {
@@ -219,6 +274,38 @@ export default function GameDevPortfolio() {
       })
     }
   }, [])
+
+  // Helper function to determine what to show for each video card
+  const getVideoCardContent = (cardId: string) => {
+    const isLoaded = loadedVideos.has(cardId)
+    const isFailed = failedVideos.has(cardId)
+    const isLoading = loadingVideos.has(cardId)
+
+    if (isFailed) {
+      return "placeholder" // Show placeholder when video fails
+    }
+    if (isLoaded) {
+      return "video" // Show video when loaded
+    }
+    if (isLoading) {
+      return "loading" // Show loading state
+    }
+    return "placeholder" // Default to placeholder
+  }
+
+  const handleGetInTouchClick = () => {
+    const emailPart1 = "arkl1te"
+    const emailPart2 = "@protonmail.com"
+    const email = emailPart1 + emailPart2
+    window.location.href = `mailto:${email}`
+  }
+
+  const handleScrollToSkills = () => {
+    const skillsSection = document.getElementById("skills")
+    if (skillsSection) {
+      skillsSection.scrollIntoView({ behavior: "smooth" })
+    }
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -294,17 +381,13 @@ export default function GameDevPortfolio() {
               gameplay experiences from early concepts to evolving prototypes.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-red-600 hover:bg-red-400 text-white border-0 transition-colors">
-                <Play className="w-4 h-4 mr-2" />
-                View Projects
-              </Button>
               <Button
                 size="lg"
-                variant="outline"
-                className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
+                className="bg-red-600 hover:bg-red-400 text-white border-0 transition-colors animate-bounce"
+                onClick={handleScrollToSkills}
               >
-                <Download className="w-4 h-4 mr-2" />
-                Download Resume
+                <ChevronDown className="w-4 h-4 mr-2" />
+                Scroll to Explore
               </Button>
             </div>
           </div>
@@ -478,69 +561,94 @@ export default function GameDevPortfolio() {
               onMouseLeave={handleCardLeave}
             >
               <div className="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 relative overflow-hidden">
+                {/* Video element - always present but conditionally visible */}
                 <video
                   ref={(el) => (videoRefs.current["gattlebrounds"] = el)}
-                  className={`w-full h-full object-cover ${loadedVideos.has("gattlebrounds") ? "block" : "hidden"}`}
+                  className={`w-full h-full object-cover ${getVideoCardContent("gattlebrounds") === "video" ? "block" : "hidden"}`}
                   loop
                   muted
                   playsInline
+                  preload="metadata"
+                  onLoadStart={() => handleVideoLoadStart("gattlebrounds")}
                   onLoadedData={() => handleVideoLoaded("gattlebrounds")}
+                  onError={(e) => handleVideoError("gattlebrounds", e)}
                 >
                   <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
                 </video>
-                <div
-                  className={`w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative ${loadedVideos.has("gattlebrounds") ? "hidden" : "block"}`}
-                >
-                  {/* Top-down action adventure visualization */}
-                  <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
-                    <defs>
-                      <linearGradient id="golemGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="rgba(147, 51, 234, 0.8)" />
-                        <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
-                        <stop offset="100%" stopColor="rgba(147, 51, 234, 0.4)" />
-                      </linearGradient>
-                    </defs>
 
-                    {/* Cyber golem character (top-down view) */}
-                    <circle cx="200" cy="120" r="12" fill="none" stroke="url(#golemGlow)" strokeWidth="2" />
-                    <circle cx="200" cy="120" r="8" fill="rgba(147, 51, 234, 0.3)" />
+                {/* Loading state */}
+                {getVideoCardContent("gattlebrounds") === "loading" && (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
+                    <div className="text-white/60 text-center">
+                      <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <p className="text-sm">Loading video...</p>
+                    </div>
+                  </div>
+                )}
 
-                    {/* Movement trail */}
-                    <path
-                      d="M180 140 Q190 130 200 120 Q210 110 220 100"
-                      stroke="rgba(236, 72, 153, 0.6)"
-                      strokeWidth="2"
-                      fill="none"
-                      strokeDasharray="3,3"
-                    />
+                {/* Placeholder/fallback content */}
+                {getVideoCardContent("gattlebrounds") === "placeholder" && (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
+                    {/* Top-down action adventure visualization */}
+                    <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
+                      <defs>
+                        <linearGradient id="golemGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="rgba(147, 51, 234, 0.8)" />
+                          <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
+                          <stop offset="100%" stopColor="rgba(147, 51, 234, 0.4)" />
+                        </linearGradient>
+                      </defs>
 
-                    {/* Platforming elements */}
-                    <rect x="120" y="80" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
-                    <rect x="240" y="160" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
-                    <rect x="80" y="180" width="30" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
+                      {/* Cyber golem character (top-down view) */}
+                      <circle cx="200" cy="120" r="12" fill="none" stroke="url(#golemGlow)" strokeWidth="2" />
+                      <circle cx="200" cy="120" r="8" fill="rgba(147, 51, 234, 0.3)" />
 
-                    {/* Otherworldly environment elements */}
-                    <circle cx="100" cy="60" r="15" fill="none" stroke="rgba(147, 51, 234, 0.4)" strokeWidth="1" />
-                    <circle cx="320" cy="180" r="20" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="1" />
+                      {/* Movement trail */}
+                      <path
+                        d="M180 140 Q190 130 200 120 Q210 110 220 100"
+                        stroke="rgba(236, 72, 153, 0.6)"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeDasharray="3,3"
+                      />
 
-                    {/* Skydiving trajectory */}
-                    <path
-                      d="M350 50 Q300 80 250 110 Q200 140 150 170"
-                      stroke="rgba(147, 51, 234, 0.5)"
-                      strokeWidth="2"
-                      fill="none"
-                      strokeDasharray="5,5"
-                    />
+                      {/* Platforming elements */}
+                      <rect x="120" y="80" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
+                      <rect
+                        x="240"
+                        y="160"
+                        width="40"
+                        height="8"
+                        fill="none"
+                        stroke="url(#golemGlow)"
+                        strokeWidth="1"
+                      />
+                      <rect x="80" y="180" width="30" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
 
-                    {/* Action elements (projectiles/effects) */}
-                    <circle cx="160" cy="100" r="2" fill="rgba(236, 72, 153, 0.8)" />
-                    <circle cx="240" cy="140" r="2" fill="rgba(147, 51, 234, 0.8)" />
-                    <circle cx="280" cy="80" r="2" fill="rgba(236, 72, 153, 0.8)" />
-                  </svg>
+                      {/* Otherworldly environment elements */}
+                      <circle cx="100" cy="60" r="15" fill="none" stroke="rgba(147, 51, 234, 0.4)" strokeWidth="1" />
+                      <circle cx="320" cy="180" r="20" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="1" />
 
-                  {/* Scanning effect */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent animate-pulse"></div>
-                </div>
+                      {/* Skydiving trajectory */}
+                      <path
+                        d="M350 50 Q300 80 250 110 Q200 140 150 170"
+                        stroke="rgba(147, 51, 234, 0.5)"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeDasharray="5,5"
+                      />
+
+                      {/* Action elements (projectiles/effects) */}
+                      <circle cx="160" cy="100" r="2" fill="rgba(236, 72, 153, 0.8)" />
+                      <circle cx="240" cy="140" r="2" fill="rgba(147, 51, 234, 0.8)" />
+                      <circle cx="280" cy="80" r="2" fill="rgba(236, 72, 153, 0.8)" />
+                    </svg>
+
+                    {/* Scanning effect */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent animate-pulse"></div>
+                  </div>
+                )}
+
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-purple-600 text-white">In Development</Badge>
@@ -588,75 +696,92 @@ export default function GameDevPortfolio() {
               onMouseLeave={handleCardLeave}
             >
               <div className="aspect-video bg-gradient-to-br from-red-500/10 to-purple-500/10 relative overflow-hidden">
+                {/* Video element - always present but conditionally visible */}
                 <video
                   ref={(el) => (videoRefs.current["stat-tracker"] = el)}
-                  className={`w-full h-full object-cover ${loadedVideos.has("stat-tracker") ? "block" : "hidden"}`}
+                  className={`w-full h-full object-cover ${getVideoCardContent("stat-tracker") === "video" ? "block" : "hidden"}`}
                   loop
                   muted
                   playsInline
+                  preload="metadata"
+                  onLoadStart={() => handleVideoLoadStart("stat-tracker")}
                   onLoadedData={() => handleVideoLoaded("stat-tracker")}
+                  onError={(e) => handleVideoError("stat-tracker", e)}
                 >
                   <source src="/game-dev-portfolio/videos/fake-stat-tracker-showcase.mp4" type="video/mp4" />
                 </video>
-                <div
-                  className={`w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative ${loadedVideos.has("stat-tracker") ? "hidden" : "block"}`}
-                >
-                  {/* Cyberpunk circuit pattern */}
-                  <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
-                    <defs>
-                      <linearGradient id="neonGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="rgba(239, 68, 68, 0.8)" />
-                        <stop offset="50%" stopColor="rgba(147, 51, 234, 0.6)" />
-                        <stop offset="100%" stopColor="rgba(239, 68, 68, 0.4)" />
-                      </linearGradient>
-                    </defs>
 
-                    {/* Circuit board traces */}
-                    <path
-                      d="M50 50 L150 50 L150 100 L250 100 L250 150 L350 150"
-                      stroke="url(#neonGlow)"
-                      strokeWidth="2"
-                      fill="none"
-                      opacity="0.7"
-                    />
-                    <path
-                      d="M100 190 L200 190 L200 140 L300 140 L300 90 L350 90"
-                      stroke="url(#neonGlow)"
-                      strokeWidth="2"
-                      fill="none"
-                      opacity="0.5"
-                    />
-                    <path
-                      d="M50 120 L120 120 L120 180 L180 180"
-                      stroke="url(#neonGlow)"
-                      strokeWidth="2"
-                      fill="none"
-                      opacity="0.6"
-                    />
+                {/* Loading state */}
+                {getVideoCardContent("stat-tracker") === "loading" && (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
+                    <div className="text-white/60 text-center">
+                      <div className="animate-spin w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <p className="text-sm">Loading video...</p>
+                    </div>
+                  </div>
+                )}
 
-                    {/* Circuit nodes */}
-                    <circle cx="150" cy="50" r="4" fill="rgba(239, 68, 68, 0.8)" />
-                    <circle cx="250" cy="100" r="4" fill="rgba(147, 51, 234, 0.8)" />
-                    <circle cx="200" cy="140" r="4" fill="rgba(239, 68, 68, 0.8)" />
-                    <circle cx="120" cy="120" r="4" fill="rgba(147, 51, 234, 0.8)" />
+                {/* Placeholder/fallback content */}
+                {getVideoCardContent("stat-tracker") === "placeholder" && (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
+                    {/* Cyberpunk circuit pattern */}
+                    <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
+                      <defs>
+                        <linearGradient id="neonGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="rgba(239, 68, 68, 0.8)" />
+                          <stop offset="50%" stopColor="rgba(147, 51, 234, 0.6)" />
+                          <stop offset="100%" stopColor="rgba(239, 68, 68, 0.4)" />
+                        </linearGradient>
+                      </defs>
 
-                    {/* Central processor */}
-                    <rect
-                      x="180"
-                      y="100"
-                      width="40"
-                      height="40"
-                      fill="none"
-                      stroke="url(#neonGlow)"
-                      strokeWidth="2"
-                      opacity="0.8"
-                    />
-                    <rect x="185" y="105" width="30" height="30" fill="rgba(239, 68, 68, 0.1)" />
-                  </svg>
+                      {/* Circuit board traces */}
+                      <path
+                        d="M50 50 L150 50 L150 100 L250 100 L250 150 L350 150"
+                        stroke="url(#neonGlow)"
+                        strokeWidth="2"
+                        fill="none"
+                        opacity="0.7"
+                      />
+                      <path
+                        d="M100 190 L200 190 L200 140 L300 140 L300 90 L350 90"
+                        stroke="url(#neonGlow)"
+                        strokeWidth="2"
+                        fill="none"
+                        opacity="0.5"
+                      />
+                      <path
+                        d="M50 120 L120 120 L120 180 L180 180"
+                        stroke="url(#neonGlow)"
+                        strokeWidth="2"
+                        fill="none"
+                        opacity="0.6"
+                      />
 
-                  {/* Animated scan line */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/20 to-transparent animate-pulse"></div>
-                </div>
+                      {/* Circuit nodes */}
+                      <circle cx="150" cy="50" r="4" fill="rgba(239, 68, 68, 0.8)" />
+                      <circle cx="250" cy="100" r="4" fill="rgba(147, 51, 234, 0.8)" />
+                      <circle cx="200" cy="140" r="4" fill="rgba(239, 68, 68, 0.8)" />
+                      <circle cx="120" cy="120" r="4" fill="rgba(147, 51, 234, 0.8)" />
+
+                      {/* Central processor */}
+                      <rect
+                        x="180"
+                        y="100"
+                        width="40"
+                        height="40"
+                        fill="none"
+                        stroke="url(#neonGlow)"
+                        strokeWidth="2"
+                        opacity="0.8"
+                      />
+                      <rect x="185" y="105" width="30" height="30" fill="rgba(239, 68, 68, 0.1)" />
+                    </svg>
+
+                    {/* Animated scan line */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/20 to-transparent animate-pulse"></div>
+                  </div>
+                )}
+
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-red-600 text-white">Featured</Badge>
@@ -799,7 +924,7 @@ export default function GameDevPortfolio() {
                     className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
                     asChild
                   >
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="https://github.com/cybernaut4" target="_blank" rel="noopener noreferrer">
                       <Github className="w-3 h-3 mr-1" />
                       Source
                     </a>
@@ -861,7 +986,7 @@ export default function GameDevPortfolio() {
                     Unity Editor
                   </Badge>
                   <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Python
+                    Bash
                   </Badge>
                   <Badge variant="outline" className="border-red-500/50 text-red-400">
                     Automation
@@ -1020,53 +1145,49 @@ export default function GameDevPortfolio() {
               from you.
             </p>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
-              <Card className="bg-black/50 border-white/10 hover:border-red-500/50 transition-all duration-300 group">
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-red-500/20 transition-colors">
-                    <Mail className="w-6 h-6 text-red-500" />
-                  </div>
-                  <h3 className="font-semibold text-white mb-2">Email</h3>
-                  <div id="email-container">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-white bg-transparent"
-                      onClick={() => {
-                        const container = document.getElementById("email-container")
-                        if (container) {
-                          container.innerHTML = '<p class="text-gray-400 text-sm">arkl1te@protonmail.com</p>'
-                        }
-                      }}
-                    >
-                      Reveal Email
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="flex justify-center mb-12">
+              <div className="grid md:grid-cols-2 gap-6 max-w-lg">
+                <Card className="bg-black/50 border-white/10 hover:border-red-500/50 transition-all duration-300 group">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-red-500/20 transition-colors">
+                      <Mail className="w-6 h-6 text-red-500" />
+                    </div>
+                    <h3 className="font-semibold text-white mb-2">Email</h3>
+                    <div id="email-container">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-white bg-transparent"
+                        onClick={() => {
+                          const container = document.getElementById("email-container")
+                          if (container) {
+                            container.innerHTML = '<p class="text-gray-400 text-sm">arkl1te@protonmail.com</p>'
+                          }
+                        }}
+                      >
+                        Reveal Email
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="bg-black/50 border-white/10 hover:border-red-500/50 transition-all duration-300 group">
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-red-500/20 transition-colors">
-                    <Github className="w-6 h-6 text-red-500" />
-                  </div>
-                  <h3 className="font-semibold text-white mb-2">GitHub</h3>
-                  <p className="text-gray-400 text-sm">@gamedev</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-black/50 border-white/10 hover:border-red-500/50 transition-all duration-300 group">
-                <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-red-500/20 transition-colors">
-                    <Linkedin className="w-6 h-6 text-red-500" />
-                  </div>
-                  <h3 className="font-semibold text-white mb-2">LinkedIn</h3>
-                  <p className="text-gray-400 text-sm">@gamedev</p>
-                </CardContent>
-              </Card>
+                <Card className="bg-black/50 border-white/10 hover:border-red-500/50 transition-all duration-300 group">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-red-500/20 transition-colors">
+                      <Github className="w-6 h-6 text-red-500" />
+                    </div>
+                    <h3 className="font-semibold text-white mb-2">GitHub</h3>
+                    <p className="text-gray-400 text-sm">@cybernaut4</p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
-            <Button size="lg" className="bg-red-600 hover:bg-red-400 text-white transition-colors">
+            <Button
+              size="lg"
+              className="bg-red-600 hover:bg-red-400 text-white transition-colors"
+              onClick={handleGetInTouchClick}
+            >
               <Mail className="w-4 h-4 mr-2" />
               Get In Touch
             </Button>
@@ -1084,12 +1205,8 @@ export default function GameDevPortfolio() {
               Multi-disciplinary game developer
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="#" className="text-gray-400 hover:text-red-500 transition-colors">
+              <Link href="https://github.com/cybernaut4" className="text-gray-400 hover:text-red-500 transition-colors">
                 <Github className="w-5 h-5" />
-              </Link>
-              <div className="w-px h-6 bg-gradient-to-b from-transparent via-red-500/50 to-transparent transform rotate-12"></div>
-              <Link href="#" className="text-gray-400 hover:text-red-500 transition-colors">
-                <Linkedin className="w-5 h-5" />
               </Link>
               <div className="w-px h-6 bg-gradient-to-b from-transparent via-red-500/50 to-transparent transform rotate-12"></div>
               <Link href="#" className="text-gray-400 hover:text-red-500 transition-colors">
