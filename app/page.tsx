@@ -16,7 +16,6 @@ import {
   Download,
   Play,
   Monitor,
-  Smartphone,
   Globe,
 } from "lucide-react"
 import Link from "next/link"
@@ -26,10 +25,90 @@ import { useState, useRef, useEffect } from "react"
 export default function GameDevPortfolio() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
+  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || "ontouchstart" in window)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  // Mobile scroll-based video logic
+  useEffect(() => {
+    if (!isMobile) return
+
+    const handleScroll = () => {
+      const cards = ["gattlebrounds", "stat-tracker"]
+
+      cards.forEach((cardId, index) => {
+        const cardElement = cardRefs.current[cardId]
+        if (!cardElement) return
+
+        const rect = cardElement.getBoundingClientRect()
+        const windowHeight = window.innerHeight
+
+        // Check if card is fully visible
+        const isFullyVisible = rect.top >= 0 && rect.bottom <= windowHeight
+
+        // Check if card is halfway offscreen
+        const isHalfwayOffscreen = rect.top < -rect.height / 2 || rect.bottom > windowHeight + rect.height / 2
+
+        if (index === 0) {
+          // First card: play if fully exposed
+          if (isFullyVisible && playingVideo !== cardId) {
+            pauseAllVideos()
+            setPlayingVideo(cardId)
+          }
+        } else {
+          // Subsequent cards: play if previous is halfway offscreen
+          const prevCardId = cards[index - 1]
+          const prevCardElement = cardRefs.current[prevCardId]
+
+          if (prevCardElement) {
+            const prevRect = prevCardElement.getBoundingClientRect()
+            const prevIsHalfwayOffscreen =
+              prevRect.top < -prevRect.height / 2 || prevRect.bottom > windowHeight + prevRect.height / 2
+
+            if (prevIsHalfwayOffscreen && isFullyVisible && playingVideo !== cardId) {
+              pauseAllVideos()
+              setPlayingVideo(cardId)
+            }
+          }
+        }
+
+        // Last card: pause if halfway offscreen
+        if (index === cards.length - 1 && isHalfwayOffscreen && playingVideo === cardId) {
+          pauseAllVideos()
+          setPlayingVideo(null)
+        }
+      })
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    handleScroll() // Initial check
+
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [isMobile, playingVideo])
+
+  const pauseAllVideos = () => {
+    Object.values(videoRefs.current).forEach((video) => {
+      if (video) {
+        video.pause()
+      }
+    })
+  }
 
   const handleCardHover = (cardId: string) => {
+    if (isMobile) return // Skip hover logic on mobile
+
     setHoveredCard(cardId)
 
     // Clear any existing timeout
@@ -39,16 +118,21 @@ export default function GameDevPortfolio() {
 
     // Set timeout for 0.5 seconds
     hoverTimeoutRef.current = setTimeout(() => {
-      if (cardId === "gattlebrounds") {
-        setPlayingVideo("gattlebrounds")
-      }
-      if (cardId === "stat-tracker") {
-        setPlayingVideo("stat-tracker")
+      if (cardId === "gattlebrounds" || cardId === "stat-tracker") {
+        // Pause other videos but don't hide them
+        Object.entries(videoRefs.current).forEach(([id, video]) => {
+          if (video && id !== cardId) {
+            video.pause()
+          }
+        })
+        setPlayingVideo(cardId)
       }
     }, 500)
   }
 
   const handleCardLeave = () => {
+    if (isMobile) return // Skip hover logic on mobile
+
     setHoveredCard(null)
 
     // Clear timeout if leaving before 0.5 seconds
@@ -85,9 +169,9 @@ export default function GameDevPortfolio() {
         <div className="container mx-auto px-4">
           <nav className="flex items-center justify-between h-16">
             <div className="text-xl font-bold">
-              <span className="text-red-500">{"$\"{"}</span>
+              <span className="text-red-500">{'$"{'}</span>
               <span className="mx-0">Arklite</span>
-              <span className="text-red-500">{"}\""}</span>
+              <span className="text-red-500">{'}"'}</span>
             </div>
             <div className="hidden md:flex items-center h-full">
               {/* Angled separator before navigation */}
@@ -136,7 +220,8 @@ export default function GameDevPortfolio() {
             </div>
             <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">Arklite</h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Programmer by trade, with a versatile game development skill set honed over five years. Crafting enjoyable gameplay experiences from early concepts to evolving prototypes.
+              Programmer by trade, with a versatile game development skill set honed over five years. Crafting enjoyable
+              gameplay experiences from early concepts to evolving prototypes.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-red-600 hover:bg-red-400 text-white border-0 transition-colors">
@@ -317,76 +402,75 @@ export default function GameDevPortfolio() {
 
           <div className="grid lg:grid-cols-2 gap-8">
             <Card
+              ref={(el) => (cardRefs.current["gattlebrounds"] = el)}
               className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
               onMouseEnter={() => handleCardHover("gattlebrounds")}
               onMouseLeave={handleCardLeave}
             >
               <div className="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 relative overflow-hidden">
-                {playingVideo === "gattlebrounds" ? (
-                  <video ref={videoRef} className="w-full h-full object-cover" autoPlay loop muted playsInline>
-                    <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
-                  </video>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
-                    {/* Top-down action adventure visualization */}
-                    <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
-                      <defs>
-                        <linearGradient id="golemGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="rgba(147, 51, 234, 0.8)" />
-                          <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
-                          <stop offset="100%" stopColor="rgba(147, 51, 234, 0.4)" />
-                        </linearGradient>
-                      </defs>
+                <video
+                  ref={(el) => (videoRefs.current["gattlebrounds"] = el)}
+                  className={`w-full h-full object-cover ${playingVideo === "gattlebrounds" ? "block" : "hidden"}`}
+                  autoPlay={playingVideo === "gattlebrounds"}
+                  loop
+                  muted
+                  playsInline
+                >
+                  <source src="/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
+                </video>
+                <div
+                  className={`w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative ${playingVideo === "gattlebrounds" ? "hidden" : "block"}`}
+                >
+                  {/* Top-down action adventure visualization */}
+                  <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
+                    <defs>
+                      <linearGradient id="golemGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(147, 51, 234, 0.8)" />
+                        <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
+                        <stop offset="100%" stopColor="rgba(147, 51, 234, 0.4)" />
+                      </linearGradient>
+                    </defs>
 
-                      {/* Cyber golem character (top-down view) */}
-                      <circle cx="200" cy="120" r="12" fill="none" stroke="url(#golemGlow)" strokeWidth="2" />
-                      <circle cx="200" cy="120" r="8" fill="rgba(147, 51, 234, 0.3)" />
+                    {/* Cyber golem character (top-down view) */}
+                    <circle cx="200" cy="120" r="12" fill="none" stroke="url(#golemGlow)" strokeWidth="2" />
+                    <circle cx="200" cy="120" r="8" fill="rgba(147, 51, 234, 0.3)" />
 
-                      {/* Movement trail */}
-                      <path
-                        d="M180 140 Q190 130 200 120 Q210 110 220 100"
-                        stroke="rgba(236, 72, 153, 0.6)"
-                        strokeWidth="2"
-                        fill="none"
-                        strokeDasharray="3,3"
-                      />
+                    {/* Movement trail */}
+                    <path
+                      d="M180 140 Q190 130 200 120 Q210 110 220 100"
+                      stroke="rgba(236, 72, 153, 0.6)"
+                      strokeWidth="2"
+                      fill="none"
+                      strokeDasharray="3,3"
+                    />
 
-                      {/* Platforming elements */}
-                      <rect x="120" y="80" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
-                      <rect
-                        x="240"
-                        y="160"
-                        width="40"
-                        height="8"
-                        fill="none"
-                        stroke="url(#golemGlow)"
-                        strokeWidth="1"
-                      />
-                      <rect x="80" y="180" width="30" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
+                    {/* Platforming elements */}
+                    <rect x="120" y="80" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
+                    <rect x="240" y="160" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
+                    <rect x="80" y="180" width="30" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
 
-                      {/* Otherworldly environment elements */}
-                      <circle cx="100" cy="60" r="15" fill="none" stroke="rgba(147, 51, 234, 0.4)" strokeWidth="1" />
-                      <circle cx="320" cy="180" r="20" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="1" />
+                    {/* Otherworldly environment elements */}
+                    <circle cx="100" cy="60" r="15" fill="none" stroke="rgba(147, 51, 234, 0.4)" strokeWidth="1" />
+                    <circle cx="320" cy="180" r="20" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="1" />
 
-                      {/* Skydiving trajectory */}
-                      <path
-                        d="M350 50 Q300 80 250 110 Q200 140 150 170"
-                        stroke="rgba(147, 51, 234, 0.5)"
-                        strokeWidth="2"
-                        fill="none"
-                        strokeDasharray="5,5"
-                      />
+                    {/* Skydiving trajectory */}
+                    <path
+                      d="M350 50 Q300 80 250 110 Q200 140 150 170"
+                      stroke="rgba(147, 51, 234, 0.5)"
+                      strokeWidth="2"
+                      fill="none"
+                      strokeDasharray="5,5"
+                    />
 
-                      {/* Action elements (projectiles/effects) */}
-                      <circle cx="160" cy="100" r="2" fill="rgba(236, 72, 153, 0.8)" />
-                      <circle cx="240" cy="140" r="2" fill="rgba(147, 51, 234, 0.8)" />
-                      <circle cx="280" cy="80" r="2" fill="rgba(236, 72, 153, 0.8)" />
-                    </svg>
+                    {/* Action elements (projectiles/effects) */}
+                    <circle cx="160" cy="100" r="2" fill="rgba(236, 72, 153, 0.8)" />
+                    <circle cx="240" cy="140" r="2" fill="rgba(147, 51, 234, 0.8)" />
+                    <circle cx="280" cy="80" r="2" fill="rgba(236, 72, 153, 0.8)" />
+                  </svg>
 
-                    {/* Scanning effect */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent animate-pulse"></div>
-                  </div>
-                )}
+                  {/* Scanning effect */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent animate-pulse"></div>
+                </div>
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-purple-600 text-white">In Development</Badge>
@@ -405,7 +489,7 @@ export default function GameDevPortfolio() {
               <CardContent>
                 <div className="flex flex-wrap gap-2 mb-4">
                   <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Godot Engine
+                    Godot
                   </Badge>
                   <Badge variant="outline" className="border-red-500/50 text-red-400">
                     C#
@@ -428,17 +512,25 @@ export default function GameDevPortfolio() {
             </Card>
 
             <Card
+              ref={(el) => (cardRefs.current["stat-tracker"] = el)}
               className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
               onMouseEnter={() => handleCardHover("stat-tracker")}
               onMouseLeave={handleCardLeave}
             >
               <div className="aspect-video bg-gradient-to-br from-red-500/10 to-purple-500/10 relative overflow-hidden">
-                {playingVideo === "stat-tracker" ? (
-                  <video ref={videoRef} className="w-full h-full object-cover" autoPlay loop muted playsInline>
-                    <source src="/game-dev-portfolio/videos/fake-stat-tracker-showcase.mp4" type="video/mp4" />
-                  </video>
-                ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
+                <video
+                  ref={(el) => (videoRefs.current["stat-tracker"] = el)}
+                  className={`w-full h-full object-cover ${playingVideo === "stat-tracker" ? "block" : "hidden"}`}
+                  autoPlay={playingVideo === "stat-tracker"}
+                  loop
+                  muted
+                  playsInline
+                >
+                  <source src="/videos/fake-stat-tracker-showcase.mp4" type="video/mp4" />
+                </video>
+                <div
+                  className={`w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative ${playingVideo === "stat-tracker" ? "hidden" : "block"}`}
+                >
                   {/* Cyberpunk circuit pattern */}
                   <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
                     <defs>
@@ -495,7 +587,6 @@ export default function GameDevPortfolio() {
                   {/* Animated scan line */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/20 to-transparent animate-pulse"></div>
                 </div>
-                )}
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-red-600 text-white">Featured</Badge>
@@ -506,7 +597,6 @@ export default function GameDevPortfolio() {
                   Stat Tracker (The Hell 2)
                   <div className="flex gap-2">
                     <Monitor className="w-4 h-4 text-gray-400" />
-                    <Smartphone className="w-4 h-4 text-gray-400" />
                   </div>
                 </CardTitle>
                 <CardDescription className="text-gray-400">
@@ -516,19 +606,25 @@ export default function GameDevPortfolio() {
               <CardContent>
                 <div className="flex flex-wrap gap-2 mb-4">
                   <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Unity
+                    Godot
                   </Badge>
                   <Badge variant="outline" className="border-red-500/50 text-red-400">
                     C#
                   </Badge>
                   <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Mobile
+                    Desktop
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" className="bg-red-600 hover:bg-red-400 transition-colors">
+                  <Button
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-400 transition-colors"
+                    onClick={() =>
+                      window.open("https://arklite-games.itch.io/stat-tracker-for-diablo-the-hell-2-mod", "_blank")
+                    }
+                  >
                     <Play className="w-3 h-3 mr-1" />
-                    Play
+                    Get it on itch.io
                   </Button>
                   <Button
                     size="sm"
@@ -734,20 +830,20 @@ export default function GameDevPortfolio() {
               <div>
                 <div className="space-y-6 text-gray-300">
                   <p className="text-lg">
-                    I'm a passionate game developer with a solid foundation in programming, 
-                    driven to create unique games through a deep dive into every aspect of development. 
-                    My journey began with code, and I’m continually broadening my skills across programming, 
-                    art, sound design, game design theory, and even pipelines and workflows.
+                    I'm a passionate game developer with a solid foundation in programming, driven to create unique
+                    games through a deep dive into every aspect of development. My journey began with code, and I'm
+                    continually broadening my skills across programming, art, sound design, game design theory, and even
+                    pipelines and workflows.
                   </p>
                   <p>
-                    Currently, I’m honing my C# skills with Godot while maintaining proficiency with Unity. 
-                    My focus is on crafting games that blend my love for diverse gameplay experiences—drawn 
-                    from years of playing everything from competitive titles to single-player adventures—into fresh, 
-                    enjoyable mechanics and systems.
+                    Currently, I'm honing my C# skills with Godot while maintaining proficiency with Unity. My focus is
+                    on crafting games that blend my love for diverse gameplay experiences—drawn from years of playing
+                    everything from competitive titles to single-player adventures—into fresh, enjoyable mechanics and
+                    systems.
                   </p>
                   <p>
-                    When I’m not coding or designing, I enjoy analyzing games, experimenting with new tools, 
-                    and contributing to the indie game community, like with my Stat Tracker tool for Diablo: The Hell 2 mod, 
+                    When I'm not coding or designing, I enjoy analyzing games, experimenting with new tools, and
+                    contributing to the indie game community, like with my Stat Tracker tool for Diablo: The Hell 2 mod,
                     which enhances player experience through data insights.
                   </p>
                 </div>
@@ -817,7 +913,7 @@ export default function GameDevPortfolio() {
                         y1="90"
                         x2="130"
                         y2="110"
-                        stroke="rgba(239, 68, 68, 0.3)"
+                        stroke="rgba(239, 68, 68,0.3)"
                         strokeWidth="1"
                         strokeDasharray="3,3"
                       />
@@ -872,7 +968,7 @@ export default function GameDevPortfolio() {
                       onClick={() => {
                         const container = document.getElementById("email-container")
                         if (container) {
-                          container.innerHTML = '<p class="text-gray-400 text-sm">hello@arklite.dev</p>'
+                          container.innerHTML = '<p class="text-gray-400 text-sm">arkl1te@protonmail.com</p>'
                         }
                       }}
                     >
