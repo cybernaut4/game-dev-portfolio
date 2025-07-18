@@ -30,6 +30,7 @@ export default function GameDevPortfolio() {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+  const playPromisesRef = useRef<{ [key: string]: Promise<void> | null }>({})
 
   // Detect mobile device
   useEffect(() => {
@@ -65,7 +66,7 @@ export default function GameDevPortfolio() {
         if (index === 0) {
           // First card: play if fully exposed
           if (isFullyVisible && playingVideo !== cardId) {
-            pauseAllVideos()
+            pauseOtherVideos(cardId)
             setPlayingVideo(cardId)
           }
         } else {
@@ -79,15 +80,15 @@ export default function GameDevPortfolio() {
               prevRect.top < -prevRect.height / 2 || prevRect.bottom > windowHeight + prevRect.height / 2
 
             if (prevIsHalfwayOffscreen && isFullyVisible && playingVideo !== cardId) {
-              pauseAllVideos()
+              pauseOtherVideos(cardId)
               setPlayingVideo(cardId)
             }
           }
         }
 
-        // Last card: pause if halfway offscreen
+        // Last card: pause if halfway offscreen (mobile only pauses when going offscreen)
         if (index === cards.length - 1 && isHalfwayOffscreen && playingVideo === cardId) {
-          pauseAllVideos()
+          safeVideoPause(cardId)
           setPlayingVideo(null)
         }
       })
@@ -99,23 +100,71 @@ export default function GameDevPortfolio() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [isMobile, playingVideo])
 
+  // Safe video play function that handles promises properly
+  const safeVideoPlay = async (cardId: string) => {
+    const video = videoRefs.current[cardId]
+    if (!video) return
+
+    try {
+      // Wait for any existing play promise to resolve first
+      if (playPromisesRef.current[cardId]) {
+        await playPromisesRef.current[cardId]
+      }
+
+      // Only reset to beginning if video hasn't been loaded/played before
+      if (!loadedVideos.has(cardId)) {
+        video.currentTime = 0
+      }
+
+      // Start new play promise
+      playPromisesRef.current[cardId] = video.play()
+      await playPromisesRef.current[cardId]
+      playPromisesRef.current[cardId] = null
+    } catch (error) {
+      playPromisesRef.current[cardId] = null
+      // Ignore AbortError as it's expected when switching videos quickly
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Video play error:", error)
+      }
+    }
+  }
+
+  // Safe video pause function that waits for play promises
+  const safeVideoPause = async (cardId: string) => {
+    const video = videoRefs.current[cardId]
+    if (!video) return
+
+    try {
+      // Wait for any existing play promise to resolve first
+      if (playPromisesRef.current[cardId]) {
+        await playPromisesRef.current[cardId]
+        playPromisesRef.current[cardId] = null
+      }
+
+      // Now it's safe to pause
+      video.pause()
+    } catch (error) {
+      playPromisesRef.current[cardId] = null
+      // Ignore AbortError as it's expected when switching videos quickly
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Video pause error:", error)
+      }
+    }
+  }
+
   // Handle video playback explicitly
   useEffect(() => {
     if (playingVideo) {
-      const video = videoRefs.current[playingVideo]
-      if (video) {
-        video.currentTime = 0 // Reset to beginning
-        video.play().catch(console.error)
-      }
+      safeVideoPlay(playingVideo)
     }
-  }, [playingVideo])
+  }, [playingVideo, loadedVideos])
 
-  const pauseAllVideos = () => {
-    Object.values(videoRefs.current).forEach((video) => {
-      if (video) {
-        video.pause()
-      }
-    })
+  const pauseOtherVideos = async (exceptCardId: string) => {
+    const pausePromises = Object.keys(videoRefs.current)
+      .filter((id) => id !== exceptCardId)
+      .map((id) => safeVideoPause(id))
+
+    await Promise.all(pausePromises)
   }
 
   const handleVideoLoaded = (cardId: string) => {
@@ -133,15 +182,13 @@ export default function GameDevPortfolio() {
     }
 
     // Set timeout for 0.5 seconds
-    hoverTimeoutRef.current = setTimeout(() => {
+    hoverTimeoutRef.current = setTimeout(async () => {
       if (cardId === "gattlebrounds" || cardId === "stat-tracker") {
-        // Pause other videos but don't hide them
-        Object.entries(videoRefs.current).forEach(([id, video]) => {
-          if (video && id !== cardId) {
-            video.pause()
-          }
-        })
-        setPlayingVideo(cardId)
+        // Only pause other videos, don't pause the current one if it's already playing
+        if (playingVideo !== cardId) {
+          await pauseOtherVideos(cardId)
+          setPlayingVideo(cardId)
+        }
       }
     }, 500)
   }
@@ -156,8 +203,8 @@ export default function GameDevPortfolio() {
       clearTimeout(hoverTimeoutRef.current)
     }
 
-    // Desktop: Don't pause videos when leaving cards - let them continue playing
-    // Videos will only pause when another video starts playing
+    // On desktop, don't pause videos when leaving - only when another video starts
+    // This allows videos to continue playing until another card is hovered
   }
 
   useEffect(() => {
@@ -166,6 +213,10 @@ export default function GameDevPortfolio() {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current)
       }
+      // Clean up any pending play promises
+      Object.keys(playPromisesRef.current).forEach((cardId) => {
+        playPromisesRef.current[cardId] = null
+      })
     }
   }, [])
 
@@ -430,7 +481,6 @@ export default function GameDevPortfolio() {
                 <video
                   ref={(el) => (videoRefs.current["gattlebrounds"] = el)}
                   className={`w-full h-full object-cover ${loadedVideos.has("gattlebrounds") ? "block" : "hidden"}`}
-                  autoPlay={playingVideo === "gattlebrounds"}
                   loop
                   muted
                   playsInline
@@ -541,7 +591,6 @@ export default function GameDevPortfolio() {
                 <video
                   ref={(el) => (videoRefs.current["stat-tracker"] = el)}
                   className={`w-full h-full object-cover ${loadedVideos.has("stat-tracker") ? "block" : "hidden"}`}
-                  autoPlay={playingVideo === "stat-tracker"}
                   loop
                   muted
                   playsInline
