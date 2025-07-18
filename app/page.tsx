@@ -25,6 +25,7 @@ import { useState, useRef, useEffect } from "react"
 export default function GameDevPortfolio() {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
+  const [loadedVideos, setLoadedVideos] = useState<Set<string>>(new Set())
   const [isMobile, setIsMobile] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
@@ -117,6 +118,10 @@ export default function GameDevPortfolio() {
     })
   }
 
+  const handleVideoLoaded = (cardId: string) => {
+    setLoadedVideos((prev) => new Set(prev).add(cardId))
+  }
+
   const handleCardHover = (cardId: string) => {
     if (isMobile) return // Skip hover logic on mobile
 
@@ -151,9 +156,8 @@ export default function GameDevPortfolio() {
       clearTimeout(hoverTimeoutRef.current)
     }
 
-    // Pause all videos when leaving
-    pauseAllVideos()
-    setPlayingVideo(null)
+    // Desktop: Don't pause videos when leaving cards - let them continue playing
+    // Videos will only pause when another video starts playing
   }
 
   useEffect(() => {
@@ -425,16 +429,17 @@ export default function GameDevPortfolio() {
               <div className="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 relative overflow-hidden">
                 <video
                   ref={(el) => (videoRefs.current["gattlebrounds"] = el)}
-                  className={`w-full h-full object-cover ${playingVideo === "gattlebrounds" ? "block" : "hidden"}`}
+                  className={`w-full h-full object-cover ${loadedVideos.has("gattlebrounds") ? "block" : "hidden"}`}
                   autoPlay={playingVideo === "gattlebrounds"}
                   loop
                   muted
                   playsInline
+                  onLoadedData={() => handleVideoLoaded("gattlebrounds")}
                 >
                   <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
                 </video>
                 <div
-                  className={`w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative ${playingVideo === "gattlebrounds" ? "hidden" : "block"}`}
+                  className={`w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative ${loadedVideos.has("gattlebrounds") ? "hidden" : "block"}`}
                 >
                   {/* Top-down action adventure visualization */}
                   <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
@@ -535,16 +540,17 @@ export default function GameDevPortfolio() {
               <div className="aspect-video bg-gradient-to-br from-red-500/10 to-purple-500/10 relative overflow-hidden">
                 <video
                   ref={(el) => (videoRefs.current["stat-tracker"] = el)}
-                  className={`w-full h-full object-cover ${playingVideo === "stat-tracker" ? "block" : "hidden"}`}
+                  className={`w-full h-full object-cover ${loadedVideos.has("stat-tracker") ? "block" : "hidden"}`}
                   autoPlay={playingVideo === "stat-tracker"}
                   loop
                   muted
                   playsInline
+                  onLoadedData={() => handleVideoLoaded("stat-tracker")}
                 >
                   <source src="/game-dev-portfolio/videos/fake-stat-tracker-showcase.mp4" type="video/mp4" />
                 </video>
                 <div
-                  className={`w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative ${playingVideo === "stat-tracker" ? "hidden" : "block"}`}
+                  className={`w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative ${loadedVideos.has("stat-tracker") ? "hidden" : "block"}`}
                 >
                   {/* Cyberpunk circuit pattern */}
                   <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
