@@ -42,6 +42,9 @@ export default function GameDevPortfolio() {
       if (cardId === "gattlebrounds") {
         setPlayingVideo("gattlebrounds")
       }
+      if (cardId === "stat-tracker") {
+        setPlayingVideo("stat-tracker")
+      }
     }, 500)
   }
 
@@ -426,10 +429,15 @@ export default function GameDevPortfolio() {
 
             <Card
               className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
-              onMouseEnter={() => handleCardHover("cyber-runner")}
+              onMouseEnter={() => handleCardHover("stat-tracker")}
               onMouseLeave={handleCardLeave}
             >
               <div className="aspect-video bg-gradient-to-br from-red-500/10 to-purple-500/10 relative overflow-hidden">
+                {playingVideo === "stat-tracker" ? (
+                  <video ref={videoRef} className="w-full h-full object-cover" autoPlay loop muted playsInline>
+                    <source src="/game-dev-portfolio/videos/fake-stat-tracker-showcase.mp4" type="video/mp4" />
+                  </video>
+                ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
                   {/* Cyberpunk circuit pattern */}
                   <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
@@ -487,6 +495,7 @@ export default function GameDevPortfolio() {
                   {/* Animated scan line */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/20 to-transparent animate-pulse"></div>
                 </div>
+                )}
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
                 <div className="absolute top-4 right-4">
                   <Badge className="bg-red-600 text-white">Featured</Badge>
@@ -494,14 +503,14 @@ export default function GameDevPortfolio() {
               </div>
               <CardHeader>
                 <CardTitle className="text-white flex items-center justify-between">
-                  Cyber Runner
+                  Stat Tracker (The Hell 2)
                   <div className="flex gap-2">
                     <Monitor className="w-4 h-4 text-gray-400" />
                     <Smartphone className="w-4 h-4 text-gray-400" />
                   </div>
                 </CardTitle>
                 <CardDescription className="text-gray-400">
-                  A fast-paced cyberpunk endless runner with procedural level generation and dynamic difficulty scaling.
+                  A tool for streamers to track their character stats for Diablo: The Hell 2.
                 </CardDescription>
               </CardHeader>
               <CardContent>
