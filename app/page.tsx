@@ -98,6 +98,17 @@ export default function GameDevPortfolio() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [isMobile, playingVideo])
 
+  // Handle video playback explicitly
+  useEffect(() => {
+    if (playingVideo) {
+      const video = videoRefs.current[playingVideo]
+      if (video) {
+        video.currentTime = 0 // Reset to beginning
+        video.play().catch(console.error)
+      }
+    }
+  }, [playingVideo])
+
   const pauseAllVideos = () => {
     Object.values(videoRefs.current).forEach((video) => {
       if (video) {
@@ -139,6 +150,10 @@ export default function GameDevPortfolio() {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current)
     }
+
+    // Pause all videos when leaving
+    pauseAllVideos()
+    setPlayingVideo(null)
   }
 
   useEffect(() => {
