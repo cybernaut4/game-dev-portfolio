@@ -212,7 +212,17 @@ export default function GameDevPortfolio() {
   }
 
   const handleVideoError = (cardId: string, error: any) => {
-    console.error(`Video failed to load: ${cardId}`, error)
+    // Extract more detailed error information
+    const errorDetails = error?.target?.error || error
+    const errorCode = errorDetails?.code
+    const errorMessage = errorDetails?.message || "Unknown error"
+
+    console.error(`Video failed to load: ${cardId}`, {
+      code: errorCode,
+      message: errorMessage,
+      error: errorDetails,
+    })
+
     setFailedVideos((prev) => new Set(prev).add(cardId))
     setLoadingVideos((prev) => {
       const newSet = new Set(prev)
@@ -553,457 +563,403 @@ export default function GameDevPortfolio() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8">
-            <Card
-              ref={(el) => (cardRefs.current["gattlebrounds"] = el)}
-              className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
-              onMouseEnter={() => handleCardHover("gattlebrounds")}
-              onMouseLeave={handleCardLeave}
-            >
-              <div className="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 relative overflow-hidden">
-                {/* Video element - always present but conditionally visible */}
-                <video
-                  ref={(el) => (videoRefs.current["gattlebrounds"] = el)}
-                  className={`w-full h-full object-cover ${getVideoCardContent("gattlebrounds") === "video" ? "block" : "hidden"}`}
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  onLoadStart={() => handleVideoLoadStart("gattlebrounds")}
-                  onLoadedData={() => handleVideoLoaded("gattlebrounds")}
-                  onError={(e) => handleVideoError("gattlebrounds", e)}
-                >
-                  <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
-                </video>
+          <div className="flex flex-wrap justify-center gap-8 max-w-6xl mx-auto">
+            <div className="w-full lg:w-[calc(50%-1rem)] max-w-lg">
+              <Card
+                ref={(el) => (cardRefs.current["gattlebrounds"] = el)}
+                className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+                onMouseEnter={() => handleCardHover("gattlebrounds")}
+                onMouseLeave={handleCardLeave}
+              >
+                <div className="aspect-video bg-gradient-to-br from-purple-500/10 to-pink-500/10 relative overflow-hidden">
+                  {/* Video element - always present but conditionally visible */}
+                  <video
+                    ref={(el) => (videoRefs.current["gattlebrounds"] = el)}
+                    className={`w-full h-full object-cover ${getVideoCardContent("gattlebrounds") === "video" ? "block" : "hidden"}`}
+                    loop
+                    muted
+                    playsInline
+                    preload="metadata"
+                    onLoadStart={() => handleVideoLoadStart("gattlebrounds")}
+                    onLoadedData={() => handleVideoLoaded("gattlebrounds")}
+                    onError={(e) => handleVideoError("gattlebrounds", e)}
+                  >
+                    <source src="/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
+                  </video>
 
-                {/* Loading state */}
-                {getVideoCardContent("gattlebrounds") === "loading" && (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
-                    <div className="text-white/60 text-center">
-                      <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                      <p className="text-sm">Loading video...</p>
+                  {/* Loading state */}
+                  {getVideoCardContent("gattlebrounds") === "loading" && (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
+                      <div className="text-white/60 text-center">
+                        <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <p className="text-sm">Loading video...</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Placeholder/fallback content */}
-                {getVideoCardContent("gattlebrounds") === "placeholder" && (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
-                    {/* Top-down action adventure visualization */}
+                  {/* Placeholder/fallback content */}
+                  {getVideoCardContent("gattlebrounds") === "placeholder" && (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center relative">
+                      {/* Top-down action adventure visualization */}
+                      <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
+                        <defs>
+                          <linearGradient id="golemGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(147, 51, 234, 0.8)" />
+                            <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
+                            <stop offset="100%" stopColor="rgba(147, 51, 234, 0.4)" />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Cyber golem character (top-down view) */}
+                        <circle cx="200" cy="120" r="12" fill="none" stroke="url(#golemGlow)" strokeWidth="2" />
+                        <circle cx="200" cy="120" r="8" fill="rgba(147, 51, 234, 0.3)" />
+
+                        {/* Movement trail */}
+                        <path
+                          d="M180 140 Q190 130 200 120 Q210 110 220 100"
+                          stroke="rgba(236, 72, 153, 0.6)"
+                          strokeWidth="2"
+                          fill="none"
+                          strokeDasharray="3,3"
+                        />
+
+                        {/* Platforming elements */}
+                        <rect
+                          x="120"
+                          y="80"
+                          width="40"
+                          height="8"
+                          fill="none"
+                          stroke="url(#golemGlow)"
+                          strokeWidth="1"
+                        />
+                        <rect
+                          x="240"
+                          y="160"
+                          width="40"
+                          height="8"
+                          fill="none"
+                          stroke="url(#golemGlow)"
+                          strokeWidth="1"
+                        />
+                        <rect
+                          x="80"
+                          y="180"
+                          width="30"
+                          height="8"
+                          fill="none"
+                          stroke="url(#golemGlow)"
+                          strokeWidth="1"
+                        />
+
+                        {/* Otherworldly environment elements */}
+                        <circle cx="100" cy="60" r="15" fill="none" stroke="rgba(147, 51, 234, 0.4)" strokeWidth="1" />
+                        <circle cx="320" cy="180" r="20" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="1" />
+
+                        {/* Skydiving trajectory */}
+                        <path
+                          d="M350 50 Q300 80 250 110 Q200 140 150 170"
+                          stroke="rgba(147, 51, 234, 0.5)"
+                          strokeWidth="2"
+                          fill="none"
+                          strokeDasharray="5,5"
+                        />
+
+                        {/* Action elements (projectiles/effects) */}
+                        <circle cx="160" cy="100" r="2" fill="rgba(236, 72, 153, 0.8)" />
+                        <circle cx="240" cy="140" r="2" fill="rgba(147, 51, 234, 0.8)" />
+                        <circle cx="280" cy="80" r="2" fill="rgba(236, 72, 153, 0.8)" />
+                      </svg>
+
+                      {/* Scanning effect */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent animate-pulse"></div>
+                    </div>
+                  )}
+
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+                  <div className="absolute top-4 right-4">
+                    <Badge className="bg-purple-600 text-white">In Development</Badge>
+                  </div>
+                </div>
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center justify-between">
+                    Gattlebrounds
+                    <Monitor className="w-4 h-4 text-gray-400" />
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Top-down action adventure shooter with challenging platforming and skydiving through otherworldly
+                    environments as a cyber golem.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      Godot
+                    </Badge>
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      C#
+                    </Badge>
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      Single Player
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
+                    >
+                      <Zap className="w-3 h-3 mr-1" />
+                      Coming Soon
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="w-full lg:w-[calc(50%-1rem)] max-w-lg">
+              <Card
+                ref={(el) => (cardRefs.current["stat-tracker"] = el)}
+                className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+                onMouseEnter={() => handleCardHover("stat-tracker")}
+                onMouseLeave={handleCardLeave}
+              >
+                <div className="aspect-video bg-gradient-to-br from-red-500/10 to-purple-500/10 relative overflow-hidden">
+                  {/* Video element - always present but conditionally visible */}
+                  <video
+                    ref={(el) => (videoRefs.current["stat-tracker"] = el)}
+                    className={`w-full h-full object-cover ${getVideoCardContent("stat-tracker") === "video" ? "block" : "hidden"}`}
+                    loop
+                    muted
+                    playsInline
+                    preload="metadata"
+                    onLoadStart={() => handleVideoLoadStart("stat-tracker")}
+                    onLoadedData={() => handleVideoLoaded("stat-tracker")}
+                    onError={(e) => handleVideoError("stat-tracker", e)}
+                  >
+                    <source src="/videos/StatTrackerTheHell2-showcase-ok.mp4" type="video/mp4" />
+                  </video>
+
+                  {/* Loading state */}
+                  {getVideoCardContent("stat-tracker") === "loading" && (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
+                      <div className="text-white/60 text-center">
+                        <div className="animate-spin w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <p className="text-sm">Loading video...</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Placeholder/fallback content */}
+                  {getVideoCardContent("stat-tracker") === "placeholder" && (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
+                      {/* Cyberpunk circuit pattern */}
+                      <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
+                        <defs>
+                          <linearGradient id="neonGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(239, 68, 68, 0.8)" />
+                            <stop offset="50%" stopColor="rgba(147, 51, 234, 0.6)" />
+                            <stop offset="100%" stopColor="rgba(239, 68, 68, 0.4)" />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Circuit board traces */}
+                        <path
+                          d="M50 50 L150 50 L150 100 L250 100 L250 150 L350 150"
+                          stroke="url(#neonGlow)"
+                          strokeWidth="2"
+                          fill="none"
+                          opacity="0.7"
+                        />
+                        <path
+                          d="M100 190 L200 190 L200 140 L300 140 L300 90 L350 90"
+                          stroke="url(#neonGlow)"
+                          strokeWidth="2"
+                          fill="none"
+                          opacity="0.5"
+                        />
+                        <path
+                          d="M50 120 L120 120 L120 180 L180 180"
+                          stroke="url(#neonGlow)"
+                          strokeWidth="2"
+                          fill="none"
+                          opacity="0.6"
+                        />
+
+                        {/* Circuit nodes */}
+                        <circle cx="150" cy="50" r="4" fill="rgba(239, 68, 68, 0.8)" />
+                        <circle cx="250" cy="100" r="4" fill="rgba(147, 51, 234, 0.8)" />
+                        <circle cx="200" cy="140" r="4" fill="rgba(239, 68, 68, 0.8)" />
+                        <circle cx="120" cy="120" r="4" fill="rgba(147, 51, 234, 0.8)" />
+
+                        {/* Central processor */}
+                        <rect
+                          x="180"
+                          y="100"
+                          width="40"
+                          height="40"
+                          fill="none"
+                          stroke="url(#neonGlow)"
+                          strokeWidth="2"
+                          opacity="0.8"
+                        />
+                        <rect x="185" y="105" width="30" height="30" fill="rgba(239, 68, 68, 0.1)" />
+                      </svg>
+
+                      {/* Animated scan line */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/20 to-transparent animate-pulse"></div>
+                    </div>
+                  )}
+
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+                  <div className="absolute top-4 right-4">
+                    <Badge className="bg-red-600 text-white">Tool</Badge>
+                  </div>
+                </div>
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center justify-between">
+                    Stat Tracker (The Hell 2)
+                    <div className="flex gap-2">
+                      <Monitor className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    <br/>A tool for streamers to track their character stats for Diablo: The Hell 2.<br/>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      Godot
+                    </Badge>
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      C#
+                    </Badge>
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      Desktop
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="bg-red-600 hover:bg-red-400 transition-colors" asChild>
+                      <a
+                        href="https://arklite-games.itch.io/stat-tracker-for-diablo-the-hell-2-mod"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Get it on itch.io
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="w-full lg:w-[calc(50%-1rem)] max-w-lg">
+              <Card
+                className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+                onMouseEnter={() => handleCardHover("developer-tools")}
+                onMouseLeave={handleCardLeave}
+              >
+                <div className="aspect-video bg-gradient-to-br from-orange-500/10 to-red-500/10 relative overflow-hidden">
+                  <div className="w-full h-full bg-gradient-to-br from-orange-900 via-black to-red-900 flex items-center justify-center relative">
+                    {/* Developer tools interface */}
                     <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
                       <defs>
-                        <linearGradient id="golemGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="rgba(147, 51, 234, 0.8)" />
-                          <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
-                          <stop offset="100%" stopColor="rgba(147, 51, 234, 0.4)" />
+                        <linearGradient id="toolGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="rgba(249, 115, 22, 0.8)" />
+                          <stop offset="50%" stopColor="rgba(239, 68, 68, 0.6)" />
+                          <stop offset="100%" stopColor="rgba(249, 115, 22, 0.4)" />
                         </linearGradient>
                       </defs>
 
-                      {/* Cyber golem character (top-down view) */}
-                      <circle cx="200" cy="120" r="12" fill="none" stroke="url(#golemGlow)" strokeWidth="2" />
-                      <circle cx="200" cy="120" r="8" fill="rgba(147, 51, 234, 0.3)" />
-
-                      {/* Movement trail */}
-                      <path
-                        d="M180 140 Q190 130 200 120 Q210 110 220 100"
-                        stroke="rgba(236, 72, 153, 0.6)"
-                        strokeWidth="2"
-                        fill="none"
-                        strokeDasharray="3,3"
-                      />
-
-                      {/* Platforming elements */}
-                      <rect x="120" y="80" width="40" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
+                      {/* Code editor interface */}
                       <rect
-                        x="240"
-                        y="160"
-                        width="40"
-                        height="8"
+                        x="50"
+                        y="50"
+                        width="300"
+                        height="140"
                         fill="none"
-                        stroke="url(#golemGlow)"
+                        stroke="url(#toolGlow)"
+                        strokeWidth="2"
+                      />
+                      <rect x="50" y="50" width="300" height="25" fill="rgba(249, 115, 22, 0.1)" />
+
+                      {/* Code lines */}
+                      <line x1="70" y1="100" x2="180" y2="100" stroke="rgba(249, 115, 22, 0.6)" strokeWidth="2" />
+                      <line x1="70" y1="120" x2="220" y2="120" stroke="rgba(239, 68, 68, 0.6)" strokeWidth="2" />
+                      <line x1="70" y1="140" x2="160" y2="140" stroke="rgba(249, 115, 22, 0.6)" strokeWidth="2" />
+                      <line x1="70" y1="160" x2="200" y2="160" stroke="rgba(239, 68, 68, 0.6)" strokeWidth="2" />
+
+                      {/* Tool icons */}
+                      <rect
+                        x="260"
+                        y="100"
+                        width="15"
+                        height="15"
+                        fill="none"
+                        stroke="url(#toolGlow)"
                         strokeWidth="1"
                       />
-                      <rect x="80" y="180" width="30" height="8" fill="none" stroke="url(#golemGlow)" strokeWidth="1" />
-
-                      {/* Otherworldly environment elements */}
-                      <circle cx="100" cy="60" r="15" fill="none" stroke="rgba(147, 51, 234, 0.4)" strokeWidth="1" />
-                      <circle cx="320" cy="180" r="20" fill="none" stroke="rgba(236, 72, 153, 0.4)" strokeWidth="1" />
-
-                      {/* Skydiving trajectory */}
-                      <path
-                        d="M350 50 Q300 80 250 110 Q200 140 150 170"
-                        stroke="rgba(147, 51, 234, 0.5)"
-                        strokeWidth="2"
-                        fill="none"
-                        strokeDasharray="5,5"
-                      />
-
-                      {/* Action elements (projectiles/effects) */}
-                      <circle cx="160" cy="100" r="2" fill="rgba(236, 72, 153, 0.8)" />
-                      <circle cx="240" cy="140" r="2" fill="rgba(147, 51, 234, 0.8)" />
-                      <circle cx="280" cy="80" r="2" fill="rgba(236, 72, 153, 0.8)" />
-                    </svg>
-
-                    {/* Scanning effect */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/10 to-transparent animate-pulse"></div>
-                  </div>
-                )}
-
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-purple-600 text-white">In Development</Badge>
-                </div>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-white flex items-center justify-between">
-                  Gattlebrounds
-                  <Monitor className="w-4 h-4 text-gray-400" />
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Top-down action adventure shooter with challenging platforming and skydiving through otherworldly
-                  environments as a cyber golem.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Godot
-                  </Badge>
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    C#
-                  </Badge>
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Single Player
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
-                  >
-                    <Zap className="w-3 h-3 mr-1" />
-                    Coming Soon
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              ref={(el) => (cardRefs.current["stat-tracker"] = el)}
-              className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
-              onMouseEnter={() => handleCardHover("stat-tracker")}
-              onMouseLeave={handleCardLeave}
-            >
-              <div className="aspect-video bg-gradient-to-br from-red-500/10 to-purple-500/10 relative overflow-hidden">
-                {/* Video element - always present but conditionally visible */}
-                <video
-                  ref={(el) => (videoRefs.current["stat-tracker"] = el)}
-                  className={`w-full h-full object-cover ${getVideoCardContent("stat-tracker") === "video" ? "block" : "hidden"}`}
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  onLoadStart={() => handleVideoLoadStart("stat-tracker")}
-                  onLoadedData={() => handleVideoLoaded("stat-tracker")}
-                  onError={(e) => handleVideoError("stat-tracker", e)}
-                >
-                  <source src="/game-dev-portfolio/videos/fake-stat-tracker-showcase.mp4" type="video/mp4" />
-                </video>
-
-                {/* Loading state */}
-                {getVideoCardContent("stat-tracker") === "loading" && (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
-                    <div className="text-white/60 text-center">
-                      <div className="animate-spin w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                      <p className="text-sm">Loading video...</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Placeholder/fallback content */}
-                {getVideoCardContent("stat-tracker") === "placeholder" && (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center relative">
-                    {/* Cyberpunk circuit pattern */}
-                    <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
-                      <defs>
-                        <linearGradient id="neonGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="rgba(239, 68, 68, 0.8)" />
-                          <stop offset="50%" stopColor="rgba(147, 51, 234, 0.6)" />
-                          <stop offset="100%" stopColor="rgba(239, 68, 68, 0.4)" />
-                        </linearGradient>
-                      </defs>
-
-                      {/* Circuit board traces */}
-                      <path
-                        d="M50 50 L150 50 L150 100 L250 100 L250 150 L350 150"
-                        stroke="url(#neonGlow)"
-                        strokeWidth="2"
-                        fill="none"
-                        opacity="0.7"
-                      />
-                      <path
-                        d="M100 190 L200 190 L200 140 L300 140 L300 90 L350 90"
-                        stroke="url(#neonGlow)"
-                        strokeWidth="2"
-                        fill="none"
-                        opacity="0.5"
-                      />
-                      <path
-                        d="M50 120 L120 120 L120 180 L180 180"
-                        stroke="url(#neonGlow)"
-                        strokeWidth="2"
-                        fill="none"
-                        opacity="0.6"
-                      />
-
-                      {/* Circuit nodes */}
-                      <circle cx="150" cy="50" r="4" fill="rgba(239, 68, 68, 0.8)" />
-                      <circle cx="250" cy="100" r="4" fill="rgba(147, 51, 234, 0.8)" />
-                      <circle cx="200" cy="140" r="4" fill="rgba(239, 68, 68, 0.8)" />
-                      <circle cx="120" cy="120" r="4" fill="rgba(147, 51, 234, 0.8)" />
-
-                      {/* Central processor */}
                       <rect
-                        x="180"
+                        x="280"
                         y="100"
-                        width="40"
-                        height="40"
+                        width="15"
+                        height="15"
                         fill="none"
-                        stroke="url(#neonGlow)"
-                        strokeWidth="2"
-                        opacity="0.8"
+                        stroke="url(#toolGlow)"
+                        strokeWidth="1"
                       />
-                      <rect x="185" y="105" width="30" height="30" fill="rgba(239, 68, 68, 0.1)" />
+                      <rect
+                        x="300"
+                        y="100"
+                        width="15"
+                        height="15"
+                        fill="none"
+                        stroke="url(#toolGlow)"
+                        strokeWidth="1"
+                      />
                     </svg>
 
-                    {/* Animated scan line */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/20 to-transparent animate-pulse"></div>
+                    {/* Compilation effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/10 to-transparent animate-pulse"></div>
                   </div>
-                )}
-
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-red-600 text-white">Featured</Badge>
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
+                  <div className="absolute top-4 right-4">
+                    <Badge className="bg-orange-600 text-white">Tools</Badge>
+                  </div>
                 </div>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-white flex items-center justify-between">
-                  Stat Tracker (The Hell 2)
+                <CardHeader>
+                  <CardTitle className="text-white">Developer Tools</CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Custom tools and utilities I've built to streamline game development workflows.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      Unity Editor
+                    </Badge>
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      Bash
+                    </Badge>
+                    <Badge variant="outline" className="border-red-500/50 text-red-400">
+                      Automation
+                    </Badge>
+                  </div>
                   <div className="flex gap-2">
-                    <Monitor className="w-4 h-4 text-gray-400" />
-                  </div>
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  A tool for streamers to track their character stats for Diablo: The Hell 2.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Godot
-                  </Badge>
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    C#
-                  </Badge>
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Desktop
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" className="bg-red-600 hover:bg-red-400 transition-colors" asChild>
-                    <a
-                      href="https://arklite-games.itch.io/stat-tracker-for-diablo-the-hell-2-mod"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
                     >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      Get it on itch.io
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
-              onMouseEnter={() => handleCardHover("quantum-puzzles")}
-              onMouseLeave={handleCardLeave}
-            >
-              <div className="aspect-video bg-gradient-to-br from-blue-500/10 to-green-500/10 relative overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-black to-teal-900 flex items-center justify-center relative">
-                  {/* Quantum particle visualization */}
-                  <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
-                    <defs>
-                      <radialGradient id="quantumGlow" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stopColor="rgba(59, 130, 246, 0.8)" />
-                        <stop offset="50%" stopColor="rgba(16, 185, 129, 0.6)" />
-                        <stop offset="100%" stopColor="rgba(59, 130, 246, 0.2)" />
-                      </radialGradient>
-                    </defs>
-
-                    {/* Quantum wave patterns */}
-                    <path
-                      d="M50 120 Q100 80 150 120 T250 120 T350 120"
-                      stroke="rgba(59, 130, 246, 0.6)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M50 140 Q100 180 150 140 T250 140 T350 140"
-                      stroke="rgba(16, 185, 129, 0.6)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-
-                    {/* Quantum particles */}
-                    <circle cx="100" cy="100" r="6" fill="url(#quantumGlow)" opacity="0.8" />
-                    <circle cx="200" cy="160" r="8" fill="url(#quantumGlow)" opacity="0.6" />
-                    <circle cx="300" cy="80" r="5" fill="url(#quantumGlow)" opacity="0.9" />
-
-                    {/* Entanglement lines */}
-                    <line
-                      x1="100"
-                      y1="100"
-                      x2="200"
-                      y2="160"
-                      stroke="rgba(147, 51, 234, 0.4)"
-                      strokeWidth="1"
-                      strokeDasharray="5,5"
-                    />
-                    <line
-                      x1="200"
-                      y1="160"
-                      x2="300"
-                      y2="80"
-                      stroke="rgba(147, 51, 234, 0.4)"
-                      strokeWidth="1"
-                      strokeDasharray="5,5"
-                    />
-                  </svg>
-
-                  {/* Quantum field effect */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-transparent via-blue-500/5 to-transparent animate-pulse"></div>
-                </div>
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-blue-600 text-white">Web</Badge>
-                </div>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-white flex items-center justify-between">
-                  Quantum Puzzles
-                  <Globe className="w-4 h-4 text-gray-400" />
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Mind-bending puzzle game exploring quantum mechanics concepts through interactive gameplay.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    JavaScript
-                  </Badge>
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    WebGL
-                  </Badge>
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Physics
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" className="bg-red-600 hover:bg-red-400 transition-colors" asChild>
-                    <a href="#" target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      Play Online
-                    </a>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
-                    asChild
-                  >
-                    <a href="https://github.com/cybernaut4" target="_blank" rel="noopener noreferrer">
                       <Github className="w-3 h-3 mr-1" />
-                      Source
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
-              onMouseEnter={() => handleCardHover("developer-tools")}
-              onMouseLeave={handleCardLeave}
-            >
-              <div className="aspect-video bg-gradient-to-br from-orange-500/10 to-red-500/10 relative overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-br from-orange-900 via-black to-red-900 flex items-center justify-center relative">
-                  {/* Developer tools interface */}
-                  <svg className="w-full h-full absolute inset-0" viewBox="0 0 400 240">
-                    <defs>
-                      <linearGradient id="toolGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="rgba(249, 115, 22, 0.8)" />
-                        <stop offset="50%" stopColor="rgba(239, 68, 68, 0.6)" />
-                        <stop offset="100%" stopColor="rgba(249, 115, 22, 0.4)" />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Code editor interface */}
-                    <rect x="50" y="50" width="300" height="140" fill="none" stroke="url(#toolGlow)" strokeWidth="2" />
-                    <rect x="50" y="50" width="300" height="25" fill="rgba(249, 115, 22, 0.1)" />
-
-                    {/* Code lines */}
-                    <line x1="70" y1="100" x2="180" y2="100" stroke="rgba(249, 115, 22, 0.6)" strokeWidth="2" />
-                    <line x1="70" y1="120" x2="220" y2="120" stroke="rgba(239, 68, 68, 0.6)" strokeWidth="2" />
-                    <line x1="70" y1="140" x2="160" y2="140" stroke="rgba(249, 115, 22, 0.6)" strokeWidth="2" />
-                    <line x1="70" y1="160" x2="200" y2="160" stroke="rgba(239, 68, 68, 0.6)" strokeWidth="2" />
-
-                    {/* Tool icons */}
-                    <rect x="260" y="100" width="15" height="15" fill="none" stroke="url(#toolGlow)" strokeWidth="1" />
-                    <rect x="280" y="100" width="15" height="15" fill="none" stroke="url(#toolGlow)" strokeWidth="1" />
-                    <rect x="300" y="100" width="15" height="15" fill="none" stroke="url(#toolGlow)" strokeWidth="1" />
-                  </svg>
-
-                  {/* Compilation effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-500/10 to-transparent animate-pulse"></div>
-                </div>
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-orange-600 text-white">Tools</Badge>
-                </div>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-white">Developer Tools</CardTitle>
-                <CardDescription className="text-gray-400">
-                  Custom tools and utilities I've built to streamline game development workflows.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Unity Editor
-                  </Badge>
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Bash
-                  </Badge>
-                  <Badge variant="outline" className="border-red-500/50 text-red-400">
-                    Automation
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-white/20 text-white hover:bg-white/20 hover:text-white bg-transparent transition-colors"
-                  >
-                    <Github className="w-3 h-3 mr-1" />
-                    View Tools
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                      View Tools
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
