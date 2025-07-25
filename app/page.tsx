@@ -584,7 +584,7 @@ export default function GameDevPortfolio() {
                     onLoadedData={() => handleVideoLoaded("gattlebrounds")}
                     onError={(e) => handleVideoError("gattlebrounds", e)}
                   >
-                    <source src="/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
+                    <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
                   </video>
 
                   {/* Loading state */}
@@ -737,7 +737,7 @@ export default function GameDevPortfolio() {
                     onLoadedData={() => handleVideoLoaded("stat-tracker")}
                     onError={(e) => handleVideoError("stat-tracker", e)}
                   >
-                    <source src="/videos/StatTrackerTheHell2-showcase-ok.mp4" type="video/mp4" />
+                    <source src="/game-dev-portfolio/videos/StatTrackerTheHell2-showcase-ok.mp4" type="video/mp4" />
                   </video>
 
                   {/* Loading state */}
