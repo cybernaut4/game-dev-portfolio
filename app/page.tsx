@@ -73,50 +73,41 @@ export default function GameDevPortfolio() {
     if (!isMobile) return
 
     const handleScroll = () => {
-      const cards = ["gattlebrounds", "stat-tracker"]
+      const videoCardIds = ["gattlebrounds", "stat-tracker"] // List of all video card IDs
+      let newPlayingVideoId: string | null = null
+      let maxVisibility = 0
 
-      cards.forEach((cardId, index) => {
+      videoCardIds.forEach((cardId) => {
         const cardElement = cardRefs.current[cardId]
         if (!cardElement) return
 
         const rect = cardElement.getBoundingClientRect()
         const windowHeight = window.innerHeight
 
-        // Check if card is fully visible
-        const isFullyVisible = rect.top >= 0 && rect.bottom <= windowHeight
+        // Calculate visible height
+        const visibleHeight = Math.min(rect.bottom, windowHeight) - Math.max(rect.top, 0)
+        const visibilityRatio = rect.height > 0 ? visibleHeight / rect.height : 0
 
-        // Check if card is halfway offscreen
-        const isHalfwayOffscreen = rect.top < -rect.height / 2 || rect.bottom > windowHeight + rect.height / 2
-
-        if (index === 0) {
-          // First card: play if fully exposed
-          if (isFullyVisible && playingVideo !== cardId) {
-            pauseOtherVideos(cardId)
-            setPlayingVideo(cardId)
-          }
-        } else {
-          // Subsequent cards: play if previous is halfway offscreen
-          const prevCardId = cards[index - 1]
-          const prevCardElement = cardRefs.current[prevCardId]
-
-          if (prevCardElement) {
-            const prevRect = prevCardElement.getBoundingClientRect()
-            const prevIsHalfwayOffscreen =
-              prevRect.top < -prevRect.height / 2 || prevRect.bottom > windowHeight + rect.height / 2
-
-            if (prevIsHalfwayOffscreen && isFullyVisible && playingVideo !== cardId) {
-              pauseOtherVideos(cardId)
-              setPlayingVideo(cardId)
-            }
-          }
-        }
-
-        // Last card: pause if halfway offscreen (mobile only pauses when going offscreen)
-        if (index === cards.length - 1 && isHalfwayOffscreen && playingVideo === cardId) {
-          safeVideoPause(cardId)
-          setPlayingVideo(null)
+        // If a card is mostly visible (e.g., > 80%) and more visible than current max
+        // Or if it's the currently playing video and still significantly visible (e.g., > 50%)
+        if (
+          (visibilityRatio > 0.8 && visibilityRatio > maxVisibility) ||
+          (cardId === playingVideo && visibilityRatio > 0.5)
+        ) {
+          maxVisibility = visibilityRatio
+          newPlayingVideoId = cardId
         }
       })
+
+      // If a new video should play or the current one should stop
+      if (newPlayingVideoId && newPlayingVideoId !== playingVideo) {
+        pauseOtherVideos(newPlayingVideoId) // Pause all others
+        setPlayingVideo(newPlayingVideoId) // Set the new one to play
+      } else if (!newPlayingVideoId && playingVideo) {
+        // If no video is prominently visible and one was playing, pause it
+        safeVideoPause(playingVideo)
+        setPlayingVideo(null)
+      }
     }
 
     window.addEventListener("scroll", handleScroll)
@@ -824,7 +815,7 @@ export default function GameDevPortfolio() {
                     </div>
                   </CardTitle>
                   <CardDescription className="text-gray-400">
-                    <br/>A tool for streamers to track their character stats for Diablo: The Hell 2.<br/>
+                    A tool for streamers to track their character stats for Diablo: The Hell 2.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -857,7 +848,7 @@ export default function GameDevPortfolio() {
 
             <div className="w-full lg:w-[calc(50%-1rem)] max-w-lg">
               <Card
-                className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+                className="bg-bWlack/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
                 onMouseEnter={() => handleCardHover("developer-tools")}
                 onMouseLeave={handleCardLeave}
               >
