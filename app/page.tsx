@@ -636,7 +636,7 @@ export default function GameDevPortfolio() {
                     onTimeUpdate={() => handleVideoTimeUpdate("gattlebrounds")}
                     onProgress={() => handleVideoTimeUpdate("gattlebrounds")}
                   >
-                    <source src="/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
+                    <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
                   </video>
 
                   {/* Loading state */}
@@ -814,7 +814,7 @@ export default function GameDevPortfolio() {
                     onTimeUpdate={() => handleVideoTimeUpdate("stat-tracker")}
                     onProgress={() => handleVideoTimeUpdate("stat-tracker")}
                   >
-                    <source src="/videos/StatTrackerTheHell2-showcase-ok.mp4" type="video/mp4" />
+                    <source src="/game-dev-portfolio/videos/StatTrackerTheHell2-showcase-ok.mp4" type="video/mp4" />
                   </video>
 
                   {/* Loading state */}
