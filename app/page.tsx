@@ -19,6 +19,7 @@ export default function GameDevPortfolio() {
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const playPromisesRef = useRef<{ [key: string]: Promise<void> | null }>({})
+  const [videoProgress, setVideoProgress] = useState<{ [key: string]: number }>({})
 
   // Detect mobile device
   useEffect(() => {
@@ -231,6 +232,14 @@ export default function GameDevPortfolio() {
     setLoadingVideos((prev) => new Set(prev).add(cardId))
   }
 
+  const handleVideoTimeUpdate = (cardId: string) => {
+    const video = videoRefs.current[cardId]
+    if (!video || !video.duration) return
+
+    const progress = (video.currentTime / video.duration) * 100
+    setVideoProgress((prev) => ({ ...prev, [cardId]: progress }))
+  }
+
   const handleCardHover = (cardId: string) => {
     if (isMobile) return // Skip hover logic on mobile
 
@@ -310,6 +319,52 @@ export default function GameDevPortfolio() {
     if (skillsSection) {
       skillsSection.scrollIntoView({ behavior: "smooth" })
     }
+  }
+
+  // Add this helper function after the existing helper functions
+  const getProgressBarSegments = (progress: number, cardId: string) => {
+    const segments = [
+      { start: 0, end: 25 },
+      { start: 25, end: 50 },
+      { start: 50, end: 75 },
+      { start: 75, end: 100 },
+    ]
+
+    // Define gradient colors for each project
+    const gradients = {
+      gattlebrounds: [
+        "from-red-500 to-orange-500", // bar1: red to orange (0-25%)
+        "from-orange-500 to-purple-500", // bar2: orange to purple (25-50%)
+        "from-blue-500 to-cyan-500", // bar3: blue to cyan (50-75%)
+        "from-cyan-500 to-white", // bar4: cyan to white (75-100%)
+      ],
+      "stat-tracker": [
+        "from-red-600 via-red-500 to-orange-500", // 0-25%
+        "from-orange-500 via-red-400 to-purple-500", // 25-50%
+        "from-purple-500 via-red-400 to-red-600", // 50-75%
+        "from-red-600 via-purple-400 to-red-700", // 75-100%
+      ],
+    }
+
+    return segments.map((segment, index) => {
+      const segmentProgress = Math.max(0, Math.min(100, progress))
+      let width = 0
+
+      if (segmentProgress > segment.start) {
+        if (segmentProgress >= segment.end) {
+          width = 100 // Full segment
+        } else {
+          // Partial segment - calculate percentage within this segment
+          width = ((segmentProgress - segment.start) / (segment.end - segment.start)) * 100
+        }
+      }
+
+      return {
+        width,
+        gradient: gradients[cardId as keyof typeof gradients]?.[index] || gradients["gattlebrounds"][index],
+        zIndex: index + 1,
+      }
+    })
   }
 
   return (
@@ -558,8 +613,8 @@ export default function GameDevPortfolio() {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-8 max-w-6xl mx-auto">
-            <div className="w-full lg:w-[calc(50%-1rem)] max-w-lg">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
               <Card
                 ref={(el) => (cardRefs.current["gattlebrounds"] = el)}
                 className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
@@ -578,8 +633,10 @@ export default function GameDevPortfolio() {
                     onLoadStart={() => handleVideoLoadStart("gattlebrounds")}
                     onLoadedData={() => handleVideoLoaded("gattlebrounds")}
                     onError={(e) => handleVideoError("gattlebrounds", e)}
+                    onTimeUpdate={() => handleVideoTimeUpdate("gattlebrounds")}
+                    onProgress={() => handleVideoTimeUpdate("gattlebrounds")}
                   >
-                    <source src="/game-dev-portfolio/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
+                    <source src="/videos/gattlebrounds-showcase.mp4" type="video/mp4" />
                   </video>
 
                   {/* Loading state */}
@@ -675,6 +732,29 @@ export default function GameDevPortfolio() {
                   <div className="absolute top-4 right-4">
                     <Badge className="bg-purple-600 text-white">In Development</Badge>
                   </div>
+
+                  {/* Video progress bar */}
+                  {getVideoCardContent("gattlebrounds") === "video" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+                      {getProgressBarSegments(videoProgress["gattlebrounds"] || 0, "gattlebrounds").map(
+                        (segment, index) => (
+                          <div
+                            key={index}
+                            className="absolute inset-0 overflow-hidden"
+                            style={{ zIndex: segment.zIndex }}
+                          >
+                            <div
+                              className={`h-full bg-gradient-to-r ${segment.gradient} transition-all duration-75 linear`}
+                              style={{
+                                width: `${segment.width}%`,
+                                // Removed backgroundSize and backgroundPosition
+                              }}
+                            />
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </div>
                 <CardHeader>
                   <CardTitle className="text-white flex items-center justify-between">
@@ -712,7 +792,7 @@ export default function GameDevPortfolio() {
               </Card>
             </div>
 
-            <div className="w-full lg:w-[calc(50%-1rem)] max-w-lg">
+            <div>
               <Card
                 ref={(el) => (cardRefs.current["stat-tracker"] = el)}
                 className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
@@ -731,8 +811,10 @@ export default function GameDevPortfolio() {
                     onLoadStart={() => handleVideoLoadStart("stat-tracker")}
                     onLoadedData={() => handleVideoLoaded("stat-tracker")}
                     onError={(e) => handleVideoError("stat-tracker", e)}
+                    onTimeUpdate={() => handleVideoTimeUpdate("stat-tracker")}
+                    onProgress={() => handleVideoTimeUpdate("stat-tracker")}
                   >
-                    <source src="/game-dev-portfolio/videos/StatTrackerTheHell2-showcase-ok.mp4" type="video/mp4" />
+                    <source src="/videos/StatTrackerTheHell2-showcase-ok.mp4" type="video/mp4" />
                   </video>
 
                   {/* Loading state */}
@@ -810,6 +892,29 @@ export default function GameDevPortfolio() {
                   <div className="absolute top-4 right-4">
                     <Badge className="bg-red-600 text-white">Tool</Badge>
                   </div>
+
+                  {/* Video progress bar */}
+                  {getVideoCardContent("stat-tracker") === "video" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+                      {getProgressBarSegments(videoProgress["stat-tracker"] || 0, "stat-tracker").map(
+                        (segment, index) => (
+                          <div
+                            key={index}
+                            className="absolute inset-0 overflow-hidden"
+                            style={{ zIndex: segment.zIndex }}
+                          >
+                            <div
+                              className={`h-full bg-gradient-to-r ${segment.gradient} transition-all duration-75 linear`}
+                              style={{
+                                width: `${segment.width}%`,
+                                // Removed backgroundSize and backgroundPosition
+                              }}
+                            />
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </div>
                 <CardHeader>
                   <CardTitle className="text-white flex items-center justify-between">
@@ -850,9 +955,9 @@ export default function GameDevPortfolio() {
               </Card>
             </div>
 
-            <div className="w-full lg:w-[calc(50%-1rem)] max-w-lg">
+            <div className="md:col-start-1 md:col-end-3 md:max-w-md md:mx-auto">
               <Card
-                className="bg-bWlack/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
+                className="bg-black/50 border-red-500/30 overflow-hidden group transition-all duration-300 shadow-lg shadow-red-500/10 hover:shadow-red-500/20 hover:border-red-500/50"
                 onMouseEnter={() => handleCardHover("developer-tools")}
                 onMouseLeave={handleCardLeave}
               >
