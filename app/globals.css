@@ -67,3 +67,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+.h-full.linear
+{
+  transition: all linear .333s !important;
+}
