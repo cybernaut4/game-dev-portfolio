@@ -3,19 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  Code,
-  Gamepad2,
-  Palette,
-  Volume2,
-  Zap,
-  Github,
-  Mail,
-  ExternalLink,
-  Monitor,
-  Globe,
-  ChevronDown,
-} from "lucide-react"
+import { Code, Gamepad2, Palette, Volume2, Zap, Github, Mail, ExternalLink, Monitor, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { AnimatedBackground } from "@/components/animated-background"
 import { useState, useRef, useEffect } from "react"
@@ -115,6 +103,22 @@ export default function GameDevPortfolio() {
 
     return () => window.removeEventListener("scroll", handleScroll)
   }, [isMobile, playingVideo])
+
+  // Desktop video preloading - load videos immediately on desktop
+  useEffect(() => {
+    if (isMobile) return // Skip on mobile, let scroll logic handle it
+
+    // On desktop, start loading videos immediately after component mounts
+    const videoCardIds = ["gattlebrounds", "stat-tracker"]
+
+    videoCardIds.forEach((cardId) => {
+      const video = videoRefs.current[cardId]
+      if (video && !loadingVideos.has(cardId) && !loadedVideos.has(cardId) && !failedVideos.has(cardId)) {
+        // Trigger load by setting the video source if it's not already loading
+        video.load()
+      }
+    })
+  }, [isMobile, loadingVideos, loadedVideos, failedVideos])
 
   // Safe video play function that handles promises properly
   const safeVideoPlay = async (cardId: string) => {
